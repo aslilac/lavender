@@ -1,0 +1,6 @@
+[book]
+title = "The ultimate Game Boy Advance reference"
+author = "McKayla Washburn"
+description = "Detailed examples of how to build a Game Boy Advance emulator, with source code and examples."
+src = "reference"
+lang = "en-US"

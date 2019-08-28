@@ -1,0 +1,290 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Scratch pad - The ultimate Game Boy Advance reference</title>
+        
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="Detailed examples of how to build a Game Boy Advance emulator, with source code and examples.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="affix"><a href="scratch.html" class="active">Scratch pad</a></li><li class="affix"><a href="references.html">References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">The ultimate Game Boy Advance reference</h1>
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#about" id="about">About</a></h1>
+<p>This chapter is basically a scratch pad for things that I have found interesting
+during the development of Lavender. It is somewhat disorganized currently, but
+I will get around to cleaning it up later in development when I have a more
+complete picture of how everything works together.</p>
+<h2><a class="header" href="#notes" id="notes">Notes</a></h2>
+<ul>
+<li>32KB of RAM</li>
+<li>96KB of VRAM</li>
+<li>256KB of external addressable memory</li>
+<li>ARM7TDMI CPU at 16.78 MHz
+<ul>
+<li>16-bit Thumb ISA</li>
+<li>32-bit ARM ISA</li>
+<li>Switch between ISA with the BX instruction</li>
+<li>Interupts and exceptions always switch to ARM, and should automatically
+switch back to Thumb on return</li>
+<li>Little endian by default</li>
+<li>You can only enter System mode from another privileged mode by modifying
+the mode bits of the Current Program Status Register (CPSR).</li>
+</ul>
+</li>
+<li>240x160 display
+<ul>
+<li>15-bit RGB (5 bits depth per channel)</li>
+<li>capable of displaying 512 simultaneous colors in &quot;character mode&quot;</li>
+<li>32,768 simultaneous colors in &quot;bitmap mode&quot;</li>
+</ul>
+</li>
+<li>Exceptions have a priority</li>
+<li>Exceptions/traps have normal and high vectors, that are controlled by external signals.</li>
+<li>14 hardware interupts</li>
+<li>While ARM can be bi-endian, it appears the Game Boy Advance only supported little endian. This would probably make things easier in some ways.</li>
+</ul>
+<h1><a class="header" href="#memory-map" id="memory-map">Memory map</a></h1>
+<table><thead><tr><th>section name (description)</th><th>address space</th><th>total size</th><th>bus width</th><th>permissions</th></tr></thead><tbody>
+<tr><td>system rom/bios</td><td>0x0000_0000-0x0000_3fff</td><td>16kb</td><td>32bit</td><td>--x</td></tr>
+<tr><td>external ram (thumb)</td><td>0x0200_0000-0x0203_ffff</td><td>256kb</td><td>16bit</td><td>rwx</td></tr>
+<tr><td>internal ram (cpu embed)</td><td>0x0300_0000-0x0300_7fff</td><td>32kb</td><td>32 bit</td><td>rwx</td></tr>
+<tr><td>io (device registers)</td><td>0x0400_0000-0x0400_03ff</td><td>1kb</td><td>16 bit</td><td>rw-</td></tr>
+<tr><td>palette ram (2 palettes x 256 entries x 15 bit colors)</td><td>0x0500_0000-0x0500_03ff</td><td>1kb</td><td>16 bit</td><td>rw-</td></tr>
+<tr><td>vram</td><td>0x0600_0000-0x0601_7fff</td><td>96kb</td><td>16 bit</td><td>r--</td></tr>
+<tr><td>object attribute memory (sprite map)</td><td>0x0700_0000-0x0700_03ff</td><td>1kb</td><td>32 bit</td><td>rw-</td></tr>
+<tr><td>game rom (bios points execution to here)</td><td>0x0800_0000-0x0dff_ffff</td><td>32mb</td><td>16 bit</td><td>r-x</td></tr>
+<tr><td>game ram (basically save files)</td><td>0x0e00_0000-0x0e00_ffff (but theorhetically could be bigger)</td><td>&gt;= 64kb</td><td>8 bit</td><td>rw-</td></tr>
+</tbody></table>
+<blockquote>
+<p>When an exception occurs, the ARM processor halts execution in a defined manner
+and begins execution at one of a number of fixed addresses in memory, known as
+the exception vectors. There is a separate vector location for each exception,
+including reset. Behavior is defined for normal running systems (see section
+A2.6) and debug events (see Chapter D3 Coprocessor 14, the Debug Coprocessor)
+An operating system installs a handler on every exception at initialization.
+Privileged operating system tasks are normally run in System mode to allow
+exceptions to occur within the operating system without state loss.</p>
+<p>[ARM v5 Architecture Reference Manual] Page A1-4</p>
+</blockquote>
+<blockquote>
+<p>The ARM instruction set can be divided into six broad classes of &gt; instruction:</p>
+<ul>
+<li>Branch instructions</li>
+<li>Data-processing instructions on page A1-7</li>
+<li>Status register transfer instructions on page A1-8</li>
+<li>Load and store instructions on page A1-8</li>
+<li>Coprocessor instructions on page A1-10</li>
+<li>Exception-generating instructions on page A1-10.</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>The data-processing instructions perform calculations on the general-purpose
+registers. There are five types of data-processing instructions:</p>
+<ul>
+<li>Arithmetic/logic instructions</li>
+<li>Comparison instructions</li>
+<li>Single Instruction Multiple Data (SIMD) instructions</li>
+<li>Multiply instructions on page A1-8</li>
+<li>Miscellaneous Data Processing instructions on page A1-8.</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>Load and Store Register instructions have three primary addressing modes, all of which use a base register and an offset specified by the instruction:</p>
+<ul>
+<li>In offset addressing, the memory address is formed by adding or subtracting an offset to or from the base register value.</li>
+<li>In pre-indexed addressing, the memory address is formed in the same way as for offset addressing. As a side effect, the memory address is also written back to the base register.</li>
+<li>In post-indexed addressing, the memory address is the base register value. As a side effect, an offset is added to or subtracted from the base register value and the result is written back to the base register.</li>
+</ul>
+</blockquote>
+<p>B, BL, BLX, BX
+Branch, and Branch with Link. See B, BL on page A4-10.
+Branch with Link and Exchange. See BLX (1) on page A4-16 and BLX (2) on page A4-18. Branch and Exchange Instruction Set. See BX on page A4-20.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+                            <a rel="next" href="references.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+                    <a href="references.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# ROMs (that you legally own, and didn't just download illegally)
+game
+rom_tests
+
+# Dependencies
+node_modules
+
+# Builds
+target
+wasm
