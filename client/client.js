@@ -61,7 +61,8 @@ function enable_drawing( ioAddress, vramAddress ) {
     // requestAnimationFrame( render );
   }
 
-  requestAnimationFrame( render );
+  // requestAnimationFrame( render );
+  render();
 }
 
 // This is so that wasm-bindgen can import this properly

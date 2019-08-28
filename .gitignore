@@ -9,5 +9,8 @@ rom_tests
 node_modules
 
 # Builds
+# book and doc are ignored temporarily until things get figured out
+book
+doc
 target
 wasm

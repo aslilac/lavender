@@ -1,11 +1,9 @@
-#[macro_use]
-use crate::log;
-
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::convert::TryFrom;
 
 pub struct Arm7Tdmi {
     pub frequency: u32,
+    pub paused: bool,
     pub registers: Arm7Registers,
 }
 
@@ -13,6 +11,7 @@ impl Arm7Tdmi {
     pub fn init() -> Self {
         let mut cpu = Self {
             frequency: 0,
+            paused: true,
             registers: Arm7Registers::init(),
         };
 

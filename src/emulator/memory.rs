@@ -1,6 +1,3 @@
-#[macro_use]
-use crate::log;
-
 pub struct Memory {
     // ALE [32:31]
     // Address [31:0]
@@ -91,16 +88,14 @@ impl Memory {
         }
     }
 
-    pub fn read_word_be(&self, address: u32) -> u32 {
-        assert_eq!(address % 4, 0);
-        log!("Not implemented!");
-        0
-    }
+    // pub fn read_word_be(&self, address: u32) -> u32 {
+    //     assert_eq!(address % 4, 0);
+    //     0
+    // }
 
-    pub fn write_word_be(&mut self, address: u32, value: u32) {
-        assert_eq!(address % 4, 0);
-        log!("Not implemented!");
-    }
+    // pub fn write_word_be(&mut self, address: u32, value: u32) {
+    //     assert_eq!(address % 4, 0);
+    // }
 
     pub fn read_half_word(&self, address: u32) -> u16 {
         assert_eq!(address % 2, 0);
@@ -115,21 +110,17 @@ impl Memory {
         self.write_byte(address + 1, (value >> 8 & 0xff) as u8);
     }
 
-    pub fn read_half_word_be(&self, address: u32) -> u16 {
-        assert_eq!(address % 2, 0);
-        log!("Not implemented!");
-        0
-    }
+    // pub fn read_half_word_be(&self, address: u32) -> u16 {
+    //     assert_eq!(address % 2, 0);
+    //     0
+    // }
 
-    pub fn write_half_word_be(&mut self, address: u32, value: u16) {
-        assert_eq!(address % 2, 0);
-        log!("Not implemented!");
-    }
+    // pub fn write_half_word_be(&mut self, address: u32, value: u16) {
+    //     assert_eq!(address % 2, 0);
+    // }
 
     pub fn read_byte(&self, address: u32) -> u8 {
         let i = address as usize;
-
-        // log!("Reading from address {:x}", address);
 
         match i {
             Self::BIOS_START..=Self::BIOS_END => self.bios[i],
@@ -147,8 +138,6 @@ impl Memory {
 
     pub fn write_byte(&mut self, address: u32, value: u8) {
         let i = address as usize;
-
-        // log!("Writing to address {:x} value {:x}", address, value);
 
         match i {
             Self::BIOS_START..=Self::BIOS_END => self.bios[i] = value,
