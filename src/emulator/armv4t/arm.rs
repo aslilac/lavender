@@ -1,92 +1,122 @@
 #[macro_use]
 use crate::log;
 
-use std::convert::TryFrom;
 use crate::emulator::{
-  cpu::{
-    *,
-    Arm7RegisterNames::*
-  },
-  Emulator
+    cpu::{Arm7OperationModes::*, Arm7RegisterNames::*, *},
+    Emulator,
 };
-
-const DP_I: u32 = 1 << 25;
-const DP_OPCODE: u32 = 7 << 21;
-const DP_S: u32 = 1 << 20;
-const DP_Rn: u32 = 15 << 16;
-const DP_Rd: u32 = 15 << 12;
-const DP_Rs: u32 = 15 << 8;
+use std::convert::TryFrom;
 
 pub fn process_instruction(emulator: &mut Emulator, instruction: u32) {
-  let category = (instruction >> 25) & 7;
-  let link = (instruction >> 24) & 1;
+    // [27:20] and [7:4] are decode bits
+    let category = instruction >> 25 & 7;
 
-  log!("Category: {} Link: {}", category, link);
+    log!("Category: {}", category);
 
-  // Data processing
-  if category == 0b000 {
-  
-  }
-
-  // Immediate data processing
-  if category == 0b001 {
-    process_data_processing_instruction(emulator, instruction);
-  }
-
-  // Branch
-  if category == 0b101 {
-    let shift = instruction & 0xffffff;
-    log!("Hit a branch instruction with link {}", link);
-    log!("Shifting by {}", shift);
-    if link > 0 {
-      log!("Setting r14 to return back");
-      // r15 is safe to access directly because it isn't branched,
-      // but r14 is branched so we much use set_register_value
-      emulator.cpu.set_register_value(r14, emulator.cpu.registers.r15);
+    match category {
+        // Data processing immediate shift if opcode != 0b10xx && s == 1
+        // Miscellaneous instructions (Figure A3-4)
+        // Data processing register shift if opcode != 0b10xx && s == 1
+        // Miscellaneous instructions (Figure A3-4)
+        // Multiplies (Figure A3-3) and Extra load/stores (Figure A3-5)
+        0b000 => (),
+        // Data processing immediate if opcode != 0b10xx && s == 1
+        // Undefined instruction
+        // Move immediate to status register
+        0b001 => data_processing_immediate(emulator, instruction),
+        // Load/store immediate offset
+        0b010 => ls_immediate_offset(emulator, instruction),
+        // Load/store register offset
+        // Media instructions + architecturally undefined (Figure A3-2)
+        // Architecturally undefined
+        0b011 => (),
+        // Load/store multiple
+        0b100 => (),
+        // Branch
+        // 0b1010 - no link
+        // 0b1011 - link
+        0b101 => {
+            let link = instruction >> 24 & 1;
+            let shift = instruction & 0xffffff;
+            log!("Hit a branch instruction with link {}", link);
+            log!("Shifting by {}", shift);
+            if link > 0 {
+                log!("Setting r14 to return back");
+                // r15 is safe to access directly because it isn't branched,
+                // but r14 is branched so we much use set_register_value
+                emulator
+                    .cpu
+                    .set_register_value(r14, emulator.cpu.registers.r15);
+            }
+            emulator.cpu.registers.r15 += shift;
+        }
+        // Coprocessor load/store and double register transfers
+        0b110 => (),
+        // Coprocessor data processing
+        // Coprocessor register transfers
+        // Software interupt
+        0b111 => (),
+        // Theoretically, this is impossible, but we don't have a way to tell the
+        // compiler that, so we have to have the case here anyway.
+        _ => (),
     }
-    emulator.cpu.registers.r15 += shift;
-  }
 }
 
-pub fn process_data_processing_instruction(emulator: &mut Emulator, instruction: u32) {
-  // let i = (instruction & Self::DP_I) >> 25;
-  let opcode = (instruction & DP_OPCODE) >> 21;
-  let s = (instruction & DP_S) >> 20;
-  let rn = Arm7RegisterNames::try_from((instruction & DP_Rn) >> 16).unwrap();
-  let rd = Arm7RegisterNames::try_from((instruction & DP_Rd) >> 12).unwrap();
-  let rs = Arm7RegisterNames::try_from((instruction & DP_Rs) >> 8).unwrap();
+pub fn data_processing_immediate_shift(emulator: &mut Emulator, instruction: u32) {
 
-  let a = emulator.cpu.get_register_value(rn);
-  let b = emulator.cpu.get_register_value(rs);
+}
 
-  match opcode {
-    0b0000 => {
-      emulator.cpu.set_register_value(rd, a & b);
-    }
-    0b0001 => {
-      emulator.cpu.set_register_value(rd, a ^ b);
-    }
-    0b0010 => {
-      emulator.cpu.set_register_value(rd, a - b);
-    }
-    0b0011 => {
-      emulator.cpu.set_register_value(rd, b - a);
-    }
-    0b0100 => {
-      emulator.cpu.set_register_value(rd, a + b);
-    }
-    0b0101 => {
-      log!("Add with carry!");
-    }
-    0b0110 => {
-      log("Subtract with carry!");
-    }
-    0b1101 => {
-      emulator.cpu.set_register_value(rd, b);
+pub fn data_processing_register_shift(emulator: &mut Emulator, instruction: u32) {
+
+}
+
+pub fn data_processing_immediate(emulator: &mut Emulator, instruction: u32) {
+    // let immediate = instruction >> 25 & 1;
+    let opcode = instruction >> 21 & 7;
+    let set_condition_flags = instruction >> 20 & 1;
+    let r_operand = Arm7RegisterNames::try_from(instruction >> 16 & 15).unwrap();
+    let r_destination = Arm7RegisterNames::try_from(instruction >> 12 & 15).unwrap();
+    let rs = Arm7RegisterNames::try_from(instruction >> 8 & 15).unwrap();
+
+    let a = emulator.cpu.get_register_value(r_operand);
+    let b = emulator.cpu.get_register_value(rs);
+
+    let Emulator { cpu, memory } = emulator;
+
+    if set_condition_flags > 0 {
+        log!("Setting the condition flags");
     }
 
-    _ => log!("unknown instruction {:x}", instruction)
-  };
+    match opcode {
+        0b0000 => cpu.set_register_value(r_destination, a & b),
+        0b0001 => {
+            emulator.cpu.set_register_value(r_destination, a ^ b);
+        }
+        0b0010 => {
+            emulator.cpu.set_register_value(r_destination, a - b);
+        }
+        0b0011 => {
+            emulator.cpu.set_register_value(r_destination, b - a);
+        }
+        0b0100 => {
+            emulator.cpu.set_register_value(r_destination, a + b);
+        }
+        0b0101 => {
+            log!("Add with carry!");
+        }
+        0b0110 => {
+            log("Subtract with carry!");
+        }
+        0b1101 => {
+            emulator.cpu.set_register_value(r_destination, b);
+        }
+
+        _ => log!("unknown instruction {:x}", instruction),
+    };
+}
+
+pub fn ls_immediate_offset(emulator: &mut Emulator, instruction: u32) {
+  let Emulator{ cpu, memory } = emulator;
 }
 
 // Move

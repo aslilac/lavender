@@ -53,7 +53,7 @@ function enable_drawing( ioAddress, vramAddress ) {
                           + ',' + data[ i * 4 + 1 ]
                           + ',' + data[ i * 4 + 2 ]
                           + ', 1)';
-        _2d.fillRect( x, y, 1.1, 1.1 );
+        _2d.fillRect( x, y, 1.2, 1.2 );
       }
     }
 

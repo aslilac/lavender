@@ -42,8 +42,7 @@ impl Arm7Tdmi {
 
         // Load the program counter from the trap vector
         self.set_register_value(
-            r15,
-            0, // memory.read_word(0)
+            r15, 0, // memory.read_word(0)
         );
     }
 
@@ -169,10 +168,10 @@ impl Arm7Tdmi {
     }
 
     pub fn set_fiq_disable(&mut self, disabled: bool) {
-        self.registers.cpsr = if disabled {
-            self.registers.cpsr | Arm7Registers::FIQ_DISABLE
+        if disabled {
+            self.registers.cpsr |= Arm7Registers::FIQ_DISABLE;
         } else {
-            self.registers.cpsr & !Arm7Registers::FIQ_DISABLE
+            self.registers.cpsr &= !Arm7Registers::FIQ_DISABLE;
         }
     }
 
@@ -181,10 +180,10 @@ impl Arm7Tdmi {
     }
 
     pub fn set_irq_disable(&mut self, disabled: bool) {
-        self.registers.cpsr = if disabled {
-            self.registers.cpsr | Arm7Registers::IRQ_DISABLE
+        if disabled {
+            self.registers.cpsr |= Arm7Registers::IRQ_DISABLE;
         } else {
-            self.registers.cpsr & !Arm7Registers::IRQ_DISABLE
+            self.registers.cpsr &= !Arm7Registers::IRQ_DISABLE;
         }
     }
 
@@ -193,10 +192,10 @@ impl Arm7Tdmi {
     }
 
     pub fn set_thumb_bit(&mut self, thumb: bool) {
-        self.registers.cpsr = if thumb {
-            self.registers.cpsr | Arm7Registers::THUMB_BIT
+        if thumb {
+            self.registers.cpsr |= Arm7Registers::THUMB_BIT;
         } else {
-            self.registers.cpsr & !Arm7Registers::THUMB_BIT
+            self.registers.cpsr &= !Arm7Registers::THUMB_BIT;
         }
     }
 
@@ -215,7 +214,7 @@ impl Arm7Tdmi {
     pub fn get_operation_mode(&self) -> Option<Arm7OperationModes> {
         match Arm7OperationModes::try_from(self.registers.cpsr & 0b11111) {
             Ok(mode) => Some(mode),
-            Err(_) => None
+            Err(_) => None,
         }
     }
 
@@ -435,4 +434,74 @@ pub enum Arm7ConditionCodes {
 
     AL = 0b1110,  // Always, no conditions
     UND = 0b1111, // Undefined, unpredictable
+}
+
+#[test]
+fn set_operation_mode() {
+    let mut cpu = Arm7Tdmi::init();
+
+    // SYS by default
+    assert_eq!(cpu.get_operation_mode(), Some(Arm7OperationModes::SYS));
+
+    // Change into UND mode
+    cpu.set_operation_mode(Arm7OperationModes::UND);
+    assert_eq!(cpu.get_operation_mode(), Some(Arm7OperationModes::UND));
+
+    // Change into USR mode
+    cpu.set_operation_mode(Arm7OperationModes::USR);
+    assert_eq!(cpu.get_operation_mode(), Some(Arm7OperationModes::USR));
+}
+
+#[test]
+fn thumb_bit() {
+    let mut cpu = Arm7Tdmi::init();
+
+    // Off by default
+    assert_eq!(cpu.get_thumb_bit(), false);
+    cpu.set_thumb_bit(true);
+    assert_eq!(cpu.get_thumb_bit(), true);
+    cpu.set_thumb_bit(false);
+    assert_eq!(cpu.get_thumb_bit(), false);
+}
+
+#[test]
+fn register_mapping() {
+    let mut cpu = Arm7Tdmi::init();
+
+    cpu.set_operation_mode(Arm7OperationModes::SVC);
+    cpu.set_register_value(Arm7RegisterNames::r13, 0xdeadbeef);
+    assert_eq!(cpu.get_register_value(Arm7RegisterNames::r13), 0xdeadbeef);
+
+    cpu.set_operation_mode(Arm7OperationModes::USR);
+    assert_eq!(cpu.get_register_value(Arm7RegisterNames::r13), 0);
+}
+
+#[test]
+fn interupts() {
+    let mut cpu = Arm7Tdmi::init();
+
+    // Disabled by default
+    assert!(cpu.is_fiq_disabled());
+    assert!(cpu.is_irq_disabled());
+
+    // Enable them
+    cpu.set_fiq_disable(false);
+    cpu.set_irq_disable(false);
+    assert!(!cpu.is_fiq_disabled());
+    assert!(!cpu.is_irq_disabled());
+}
+
+#[test]
+fn conditions() {
+    let mut cpu = Arm7Tdmi::init();
+
+    // z bit should be zero by default, so this condition is true
+    assert!(cpu.check_condition(Arm7ConditionCodes::NE));
+
+    // Turn on the z bit
+    cpu.registers.cpsr = cpu.registers.cpsr | 0x40000000;
+
+    // EQ should pass, NE should not
+    assert!(cpu.check_condition(Arm7ConditionCodes::EQ));
+    assert!(!cpu.check_condition(Arm7ConditionCodes::NE));
 }

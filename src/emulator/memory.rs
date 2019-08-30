@@ -64,7 +64,7 @@ impl Memory {
             palette: vec![0; Self::PALETTE_SIZE],
             vram: vec![0; Self::VRAM_SIZE],
             object: vec![0; Self::OBJECT_SIZE],
-            rom: vec![0; 10],
+            rom: vec![0; 1],
             save: vec![0; Self::SAVE_SIZE],
         }
     }
@@ -132,7 +132,7 @@ impl Memory {
             Self::OBJECT_START..=Self::OBJECT_END => self.object[i - Self::OBJECT_START],
             Self::ROM_START..=Self::ROM_END => self.rom[i - Self::ROM_START],
             Self::SAVE_START..=Self::SAVE_END => self.save[i - Self::SAVE_START],
-            _ => 0
+            _ => 0,
         }
     }
 
@@ -144,12 +144,45 @@ impl Memory {
             Self::EXT_START..=Self::EXT_END => self.ext[i - Self::EXT_START] = value,
             Self::RAM_START..=Self::RAM_END => self.ram[i - Self::RAM_START] = value,
             Self::IO_START..=Self::IO_END => self.io[i - Self::IO_START] = value,
-            Self::PALETTE_START..=Self::PALETTE_END => self.palette[i - Self::PALETTE_START] = value,
+            Self::PALETTE_START..=Self::PALETTE_END => {
+                self.palette[i - Self::PALETTE_START] = value
+            }
             Self::VRAM_START..=Self::VRAM_END => self.vram[i - Self::VRAM_START] = value,
             Self::OBJECT_START..=Self::OBJECT_END => self.object[i - Self::OBJECT_START] = value,
             Self::ROM_START..=Self::ROM_END => self.rom[i - Self::ROM_START] = value,
             Self::SAVE_START..=Self::SAVE_END => self.save[i - Self::SAVE_START] = value,
-            _ => ()
+            _ => (),
         };
     }
+}
+
+#[test]
+fn write_to_ram() {
+    let mut memory = Memory::init();
+
+    // Write into interal ram
+    let offset = Memory::RAM_START as u32;
+    memory.write_word(offset, 0x01020304);
+
+    // Test that it is stored correctly
+    assert_eq!(memory.ram[0], 4);
+    assert_eq!(memory.ram[1], 3);
+    assert_eq!(memory.ram[2], 2);
+    assert_eq!(memory.ram[3], 1);
+}
+
+#[test]
+fn read_from_ram() {
+    let mut memory = Memory::init();
+
+    // Write into interal ram
+    let offset = Memory::RAM_START as u32;
+    memory.write_word(offset, 0x01020304);
+
+    // Test that we read it out properly
+    assert_eq!(0x01020304, memory.read_word(offset));
+    assert_eq!(0x0304, memory.read_half_word(offset));
+    assert_eq!(0x0102, memory.read_half_word(offset + 2));
+    assert_eq!(0x04, memory.read_byte(offset));
+    assert_eq!(0x03, memory.read_byte(offset + 1));
 }

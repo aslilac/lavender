@@ -59,6 +59,8 @@ game ram (basically save files) | 0x0e00_0000-0x0e00_ffff (but theorhetically co
 > - Coprocessor instructions on page A1-10
 > - Exception-generating instructions on page A1-10.
 
+> The decode bits of an instruction are defined to be bits[27:20] and bits[7:4].
+
 > The data-processing instructions perform calculations on the general-purpose
 > registers. There are five types of data-processing instructions:
 > - Arithmetic/logic instructions

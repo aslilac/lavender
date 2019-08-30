@@ -23,6 +23,6 @@ pub fn start_gba(rom: &[u8]) {
 
     enable_drawing(
         &mut gba.memory.io[0] as *mut u8,
-        &gba.memory.vram[0] as *const u8
+        &gba.memory.vram[0] as *const u8,
     );
 }

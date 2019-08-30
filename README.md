@@ -8,6 +8,8 @@ Lavenders primary goals are to...
 who would like to experiment with virtual machine programming
   - No messy C code with #define everywhere and magic voodoo headers.
   - Constant names should prefer being clear and descriptive over being short
+  - Lots of other documentation and emulators use super gross abreviations that
+  are cute for engineers, but sad for a lowly Computer Science major like myself.
 - Provide intricate documentation of the Game Boy Advance interals, as well as
 all of the necessary inner workings of a Game Boy Advance emulator
   - An [online book](https://partheseas.github.io/lavender/book/) that compiles
