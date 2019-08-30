@@ -1,5 +1,8 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use std::convert::TryFrom;
+use std::{
+    convert::TryFrom,
+    default::Default,
+};
 
 pub struct Arm7Tdmi {
     pub frequency: u32,
@@ -12,7 +15,7 @@ impl Arm7Tdmi {
         let mut cpu = Self {
             frequency: 0,
             paused: true,
-            registers: Arm7Registers::init(),
+            registers: Arm7Registers::new(),
         };
 
         cpu.reset();
@@ -250,6 +253,7 @@ impl Arm7Tdmi {
     }
 }
 
+#[derive(Default)]
 pub struct Arm7Registers {
     // General purpose registers
     pub r0: u32,
@@ -330,46 +334,8 @@ impl Arm7Registers {
     const FIQ_DISABLE: u32 = 1 << 6;
     const THUMB_BIT: u32 = 1 << 5;
 
-    pub fn init() -> Arm7Registers {
-        Arm7Registers {
-            r0: 0,
-            r1: 1,
-            r2: 2,
-            r3: 3,
-            r4: 4,
-            r5: 5,
-            r6: 6,
-            r7: 7,
-            r8: 8,
-            r8_fiq: 0,
-            r9: 0,
-            r9_fiq: 0,
-            r10: 0,
-            r10_fiq: 0,
-            r11: 0,
-            r11_fiq: 0,
-            r12: 0,
-            r12_fiq: 0,
-            r13: 0,
-            r13_fiq: 0,
-            r13_svc: 0,
-            r13_abt: 0,
-            r13_irq: 0,
-            r13_und: 0,
-            r14: 0,
-            r14_fiq: 0,
-            r14_svc: 0,
-            r14_abt: 0,
-            r14_irq: 0,
-            r14_und: 0,
-            r15: 0,
-            cpsr: 0,
-            spsr_fiq: 0,
-            spsr_svc: 0,
-            spsr_abt: 0,
-            spsr_irq: 0,
-            spsr_und: 0,
-        }
+    pub fn new() -> Self {
+        Default::default()
     }
 }
 
@@ -437,6 +403,14 @@ pub enum Arm7ConditionCodes {
 }
 
 #[test]
+fn set_frequency() {
+    let mut cpu = Arm7Tdmi::init();
+
+    cpu.set_frequency(16780000);
+    assert_eq!(cpu.frequency, 16780000);
+}
+
+#[test]
 fn set_operation_mode() {
     let mut cpu = Arm7Tdmi::init();
 
@@ -489,6 +463,26 @@ fn interupts() {
     cpu.set_irq_disable(false);
     assert!(!cpu.is_fiq_disabled());
     assert!(!cpu.is_irq_disabled());
+}
+
+#[test]
+fn condition_bits() {
+    let mut cpu = Arm7Tdmi::init();
+
+    // Should all be off by default
+    assert!(!cpu.get_n());
+    assert!(!cpu.get_z());
+    assert!(!cpu.get_c());
+    assert!(!cpu.get_v());
+
+    // Set all of the flag bits.
+    cpu.registers.cpsr |= 0xf0000000;
+
+    // Should now all be on
+    assert!(cpu.get_n());
+    assert!(cpu.get_z());
+    assert!(cpu.get_c());
+    assert!(cpu.get_v());
 }
 
 #[test]
