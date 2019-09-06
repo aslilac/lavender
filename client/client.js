@@ -4,12 +4,9 @@
 let frame = 0;
 
 function enable_drawing( ioAddress, vramAddress ) {
-  const display =document.querySelector( '#display' );
+  const display = document.querySelector( '#display' );
   const output = document.querySelector( '#output' );
   const box = display.getBoundingClientRect();
-
-  const io = new Uint8Array( window.memory.buffer.slice( ioAddress, ioAddress + 1024 ) );
-  const vram = new Uint8Array( window.memory.buffer.slice( vramAddress, vramAddress + 96 * 1024 ) );
   
   const _2d = display.getContext( '2d' );
   const dpr = window.devicePixelRatio || 1;
@@ -26,12 +23,18 @@ function enable_drawing( ioAddress, vramAddress ) {
   function render() {
     const beginning = Date.now();
 
+    const io = new Uint8Array( window.memory.buffer.slice( ioAddress, ioAddress + 1024 ) );
+    const vram = new Uint8Array( window.memory.buffer.slice( vramAddress, vramAddress + 96 * 1024 ) );
+
     const displayMode = io[0] + (io[1] << 8);
     const data = image.data;
     const height = image.height;
     const width = image.width;
 
+    // We currently just kind of assume that the display is in mode three. We
+    // probably need to knock that off at somepoint.
     for ( let i = 0; i < 240 * 160; i++ ) {
+      // Convert the 15 bit rgb colors stored in memory to 32 bit rgba colors.
       const rgb15 = vram[ i * 2 ] + (vram[ i * 2 + 1 ] << 8);
 
       data[ i * 4 ] = (rgb15 & 0x001f) * 8;
@@ -61,13 +64,15 @@ function enable_drawing( ioAddress, vramAddress ) {
     // requestAnimationFrame( render );
   }
 
-  // requestAnimationFrame( render );
   render();
 }
 
 // This is so that wasm-bindgen can import this properly
 window.enable_drawing = enable_drawing;
 
+// We have to import both of these because index_bg doesn't correctly
+// allow us to pass values back and forth even though it does expose
+// the functions. Idk if it's a bug or intended, but this way works.
 Promise.all([
   import( '../wasm/index_bg' ),
   import( '../wasm' )
@@ -77,19 +82,10 @@ Promise.all([
 
     // Load the rom into the emulator
     fetch( '/rom_tests/bin/first.gba' )
-      .then( response => response.arrayBuffer() )
-      .then( buffer => {
-        lavender.start_gba( new Uint8Array( buffer ) );
-      });
-    
     // fetch( '/game/pokemon_emerald.gba' )
-    //   .then( response => response.arrayBuffer() )
-    //   .then( buffer => {
-    //     let data = new Uint8Array( buffer );
-
-    //     console.log( lavender );
-    //     lavender.start_gba( data.slice( 0, 10 ) );
-    //   });
+    .then( response => response.arrayBuffer() )
+      .then( buffer => lavender.start_gba( new Uint8Array( buffer ) ) );
+    
   })
 
 

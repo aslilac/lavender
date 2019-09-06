@@ -1,5 +1,4 @@
 mod armv4t;
-mod bios;
 pub mod cpu;
 mod io;
 pub mod memory;
@@ -31,7 +30,7 @@ impl Emulator {
     pub fn start(rom: &[u8]) -> Self {
         let mut emulator = Self::new();
         emulator.load_rom(&rom);
-        emulator.cpu.set_frequency(16780000); // 16.78MHz
+        emulator.cpu.set_frequency(16_780_000); // 16.78MHz
         emulator
     }
 
@@ -59,42 +58,66 @@ impl Emulator {
     pub fn test(&mut self) {
         use Arm7RegisterNames::*;
 
-        // Run a basic (arm) adding instruction in a loop
-        self.cpu.set_register_value(r3, 0);
-        self.cpu.set_register_value(r4, 1);
+        // Addition test
+        {
+            // Initialize r3 as the accumulator and r4 as the amount to add
+            self.cpu.set_register_value(r3, 0);
+            self.cpu.set_register_value(r4, 1);
 
-        for _ in 0..10 {
-            // ADD r3, r3, r4
-            arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0100_00000000);
+            // Run a basic (arm) adding instruction in a loop
+            for _ in 0..10 {
+                // ADD r3, r3, r4 (or something like that I think)
+                arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0100_00000000);
+            }
+
+            // Assert that the adding completed correctly
+            assert_eq!(self.cpu.get_register_value(r3), 10);
         }
 
-        arm::process_instruction(self, 0b1110_101_1_0000_0000_0000000000000000);
+        // Test branch instruction decoding
+        // Link with distance of 0
+        arm::process_instruction(self, 0b1110_101_1_0000_0000_0000_0000_0000_0000);
+        arm::process_instruction(self, 0b1110_101_1_0111_1111_1111_1111_1111_1111);
 
-        assert_eq!(self.cpu.get_register_value(r3), 10);
+        log!("Before subtracting 4 from pc: {}", self.cpu.registers.r15);
+        arm::process_instruction(self, 0b1110_101_1_1111_1111_1111_1111_1111_1111);
+        log!("After subtracting 4 from pc: {}", self.cpu.registers.r15);
+        // arm::process_instruction(self, 0b1110_101_1_1000_0000_0000_0000_0000_0000);
 
+        let i: i32 = 1;
+        log!("i has a value {}", i << 31);
+
+        // Test thumb (??????) instruction decoding
         thumb::process_instruction(self, 0b0000_0000_0000_0000);
 
         // Make sure the rom is correctly loaded into memory
         assert_eq!(self.memory.read_byte(0x0800_0000), self.memory.rom[0]);
 
+        // Start stepping through instructions. This probably isn't how we
+        // actually want to do it though.
         self.step();
 
-        // Set display mode to bitmap
-        self.memory.write_half_word(0x0400_0000, 0x0403);
+        // Directly manipulate the screen start and vram so that our renderer
+        // will attempt to draw an image.
+        {
+            // Set display mode to bitmap
+            self.memory.write_half_word(0x0400_0000, 0x0403);
 
-        // Write a few test pixels into vram
-        self.memory
-            .write_half_word(0x0600_0000 + (120 + 80 * 240) * 2, 0x001F);
-        self.memory
-            .write_half_word(0x0600_0000 + (136 + 80 * 240) * 2, 0x03E0);
-        self.memory
-            .write_half_word(0x0600_0000 + (120 + 96 * 240) * 2, 0x7C00);
+            // Write a few test pixels into vram
+            self.memory
+                .write_half_word(0x0600_0000 + (120 + 80 * 240) * 2, 0x001F);
+            self.memory
+                .write_half_word(0x0600_0000 + (136 + 80 * 240) * 2, 0x03E0);
+            self.memory
+                .write_half_word(0x0600_0000 + (120 + 96 * 240) * 2, 0x7C00);
 
-        // Make sure that the red pixel has the correct value (the rest probably do to)
-        assert_eq!(
-            self.memory.read_half_word(0x0600_0000 + (120 + 80 * 240) * 2),
-            31
-        );
+            // Make sure that the red pixel has the correct value (the rest probably do to)
+            assert_eq!(
+                self.memory
+                    .read_half_word(0x0600_0000 + (120 + 80 * 240) * 2),
+                31
+            );
+        }
 
         log!("Emulator started successfully!");
     }

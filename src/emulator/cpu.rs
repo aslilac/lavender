@@ -1,21 +1,24 @@
+#[macro_use]
+use crate::log;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::{
     convert::TryFrom,
     default::Default,
+    num::Wrapping,
 };
 
 pub struct Arm7Tdmi {
     pub frequency: u32,
-    pub paused: bool,
-    pub registers: Arm7Registers,
+    pub halt: bool,
+    pub registers: Arm7TdmiRegisters,
 }
 
 impl Arm7Tdmi {
     pub fn init() -> Self {
         let mut cpu = Self {
             frequency: 0,
-            paused: true,
-            registers: Arm7Registers::new(),
+            halt: true,
+            registers: Arm7TdmiRegisters::new(),
         };
 
         cpu.reset();
@@ -24,6 +27,17 @@ impl Arm7Tdmi {
 
     pub fn set_frequency(&mut self, frequency: u32) {
         self.frequency = frequency;
+    }
+
+    pub fn start(&mut self) {
+        self.halt = false;
+        if self.frequency <= 0 {
+            log!("Starting processor with frequency of zero will do nothing.");
+        }
+    }
+
+    pub fn halt(&mut self) {
+        self.halt = true;
     }
 
     pub fn reset(&mut self) {
@@ -172,38 +186,38 @@ impl Arm7Tdmi {
 
     pub fn set_fiq_disable(&mut self, disabled: bool) {
         if disabled {
-            self.registers.cpsr |= Arm7Registers::FIQ_DISABLE;
+            self.registers.cpsr |= Arm7TdmiRegisters::FIQ_DISABLE;
         } else {
-            self.registers.cpsr &= !Arm7Registers::FIQ_DISABLE;
+            self.registers.cpsr &= !Arm7TdmiRegisters::FIQ_DISABLE;
         }
     }
 
     pub fn is_fiq_disabled(&self) -> bool {
-        (self.registers.cpsr & Arm7Registers::FIQ_DISABLE) > 0
+        (self.registers.cpsr & Arm7TdmiRegisters::FIQ_DISABLE) > 0
     }
 
     pub fn set_irq_disable(&mut self, disabled: bool) {
         if disabled {
-            self.registers.cpsr |= Arm7Registers::IRQ_DISABLE;
+            self.registers.cpsr |= Arm7TdmiRegisters::IRQ_DISABLE;
         } else {
-            self.registers.cpsr &= !Arm7Registers::IRQ_DISABLE;
+            self.registers.cpsr &= !Arm7TdmiRegisters::IRQ_DISABLE;
         }
     }
 
     pub fn is_irq_disabled(&self) -> bool {
-        (self.registers.cpsr & Arm7Registers::IRQ_DISABLE) > 0
+        (self.registers.cpsr & Arm7TdmiRegisters::IRQ_DISABLE) > 0
     }
 
     pub fn set_thumb_bit(&mut self, thumb: bool) {
         if thumb {
-            self.registers.cpsr |= Arm7Registers::THUMB_BIT;
+            self.registers.cpsr |= Arm7TdmiRegisters::THUMB_BIT;
         } else {
-            self.registers.cpsr &= !Arm7Registers::THUMB_BIT;
+            self.registers.cpsr &= !Arm7TdmiRegisters::THUMB_BIT;
         }
     }
 
     pub fn get_thumb_bit(&self) -> bool {
-        (self.registers.cpsr & Arm7Registers::THUMB_BIT) > 0
+        (self.registers.cpsr & Arm7TdmiRegisters::THUMB_BIT) > 0
     }
 
     pub fn set_operation_mode(&mut self, mode: Arm7OperationModes) {
@@ -254,7 +268,7 @@ impl Arm7Tdmi {
 }
 
 #[derive(Default)]
-pub struct Arm7Registers {
+pub struct Arm7TdmiRegisters {
     // General purpose registers
     pub r0: u32,
     pub r1: u32,
@@ -329,7 +343,7 @@ pub struct Arm7Registers {
     pub spsr_und: u32,
 }
 
-impl Arm7Registers {
+impl Arm7TdmiRegisters {
     const IRQ_DISABLE: u32 = 1 << 7;
     const FIQ_DISABLE: u32 = 1 << 6;
     const THUMB_BIT: u32 = 1 << 5;
@@ -402,100 +416,105 @@ pub enum Arm7ConditionCodes {
     UND = 0b1111, // Undefined, unpredictable
 }
 
-#[test]
-fn set_frequency() {
-    let mut cpu = Arm7Tdmi::init();
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn set_frequency() {
+        let mut cpu = Arm7Tdmi::init();
 
-    cpu.set_frequency(16780000);
-    assert_eq!(cpu.frequency, 16780000);
-}
+        cpu.set_frequency(16780000);
+        assert_eq!(cpu.frequency, 16780000);
+    }
 
-#[test]
-fn set_operation_mode() {
-    let mut cpu = Arm7Tdmi::init();
+    #[test]
+    fn set_operation_mode() {
+        let mut cpu = Arm7Tdmi::init();
 
-    // SYS by default
-    assert_eq!(cpu.get_operation_mode(), Some(Arm7OperationModes::SYS));
+        // SYS by default
+        assert_eq!(cpu.get_operation_mode(), Some(Arm7OperationModes::SYS));
 
-    // Change into UND mode
-    cpu.set_operation_mode(Arm7OperationModes::UND);
-    assert_eq!(cpu.get_operation_mode(), Some(Arm7OperationModes::UND));
+        // Change into UND mode
+        cpu.set_operation_mode(Arm7OperationModes::UND);
+        assert_eq!(cpu.get_operation_mode(), Some(Arm7OperationModes::UND));
 
-    // Change into USR mode
-    cpu.set_operation_mode(Arm7OperationModes::USR);
-    assert_eq!(cpu.get_operation_mode(), Some(Arm7OperationModes::USR));
-}
+        // Change into USR mode
+        cpu.set_operation_mode(Arm7OperationModes::USR);
+        assert_eq!(cpu.get_operation_mode(), Some(Arm7OperationModes::USR));
+    }
 
-#[test]
-fn thumb_bit() {
-    let mut cpu = Arm7Tdmi::init();
+    #[test]
+    fn thumb_bit() {
+        let mut cpu = Arm7Tdmi::init();
 
-    // Off by default
-    assert_eq!(cpu.get_thumb_bit(), false);
-    cpu.set_thumb_bit(true);
-    assert_eq!(cpu.get_thumb_bit(), true);
-    cpu.set_thumb_bit(false);
-    assert_eq!(cpu.get_thumb_bit(), false);
-}
+        // Off by default
+        assert_eq!(cpu.get_thumb_bit(), false);
+        cpu.set_thumb_bit(true);
+        assert_eq!(cpu.get_thumb_bit(), true);
+        cpu.set_thumb_bit(false);
+        assert_eq!(cpu.get_thumb_bit(), false);
+    }
 
-#[test]
-fn register_mapping() {
-    let mut cpu = Arm7Tdmi::init();
+    #[test]
+    fn register_mapping() {
+        let mut cpu = Arm7Tdmi::init();
 
-    cpu.set_operation_mode(Arm7OperationModes::SVC);
-    cpu.set_register_value(Arm7RegisterNames::r13, 0xdeadbeef);
-    assert_eq!(cpu.get_register_value(Arm7RegisterNames::r13), 0xdeadbeef);
+        cpu.set_operation_mode(Arm7OperationModes::SVC);
+        cpu.set_register_value(Arm7RegisterNames::r13, 0xdeadbeef);
+        assert_eq!(cpu.get_register_value(Arm7RegisterNames::r13), 0xdeadbeef);
 
-    cpu.set_operation_mode(Arm7OperationModes::USR);
-    assert_eq!(cpu.get_register_value(Arm7RegisterNames::r13), 0);
-}
+        cpu.set_operation_mode(Arm7OperationModes::USR);
+        assert_eq!(cpu.get_register_value(Arm7RegisterNames::r13), 0);
+    }
 
-#[test]
-fn interupts() {
-    let mut cpu = Arm7Tdmi::init();
+    #[test]
+    fn interupts() {
+        let mut cpu = Arm7Tdmi::init();
 
-    // Disabled by default
-    assert!(cpu.is_fiq_disabled());
-    assert!(cpu.is_irq_disabled());
+        // Disabled by default
+        assert!(cpu.is_fiq_disabled());
+        assert!(cpu.is_irq_disabled());
 
-    // Enable them
-    cpu.set_fiq_disable(false);
-    cpu.set_irq_disable(false);
-    assert!(!cpu.is_fiq_disabled());
-    assert!(!cpu.is_irq_disabled());
-}
+        // Enable them
+        cpu.set_fiq_disable(false);
+        cpu.set_irq_disable(false);
+        assert!(!cpu.is_fiq_disabled());
+        assert!(!cpu.is_irq_disabled());
+    }
 
-#[test]
-fn condition_bits() {
-    let mut cpu = Arm7Tdmi::init();
+    #[test]
+    fn condition_bits() {
+        let mut cpu = Arm7Tdmi::init();
 
-    // Should all be off by default
-    assert!(!cpu.get_n());
-    assert!(!cpu.get_z());
-    assert!(!cpu.get_c());
-    assert!(!cpu.get_v());
+        // Should all be off by default
+        assert!(!cpu.get_n());
+        assert!(!cpu.get_z());
+        assert!(!cpu.get_c());
+        assert!(!cpu.get_v());
 
-    // Set all of the flag bits.
-    cpu.registers.cpsr |= 0xf0000000;
+        // Set all of the flag bits.
+        cpu.registers.cpsr |= 0xf0000000;
 
-    // Should now all be on
-    assert!(cpu.get_n());
-    assert!(cpu.get_z());
-    assert!(cpu.get_c());
-    assert!(cpu.get_v());
-}
+        // Should now all be on
+        assert!(cpu.get_n());
+        assert!(cpu.get_z());
+        assert!(cpu.get_c());
+        assert!(cpu.get_v());
+    }
 
-#[test]
-fn conditions() {
-    let mut cpu = Arm7Tdmi::init();
+    #[test]
+    fn conditions() {
+        let mut cpu = Arm7Tdmi::init();
 
-    // z bit should be zero by default, so this condition is true
-    assert!(cpu.check_condition(Arm7ConditionCodes::NE));
+        // z bit should be zero by default, so this condition is true
+        assert!(cpu.check_condition(Arm7ConditionCodes::NE));
 
-    // Turn on the z bit
-    cpu.registers.cpsr = cpu.registers.cpsr | 0x40000000;
+        // Turn on the z bit
+        cpu.registers.cpsr = cpu.registers.cpsr | 0x40000000;
 
-    // EQ should pass, NE should not
-    assert!(cpu.check_condition(Arm7ConditionCodes::EQ));
-    assert!(!cpu.check_condition(Arm7ConditionCodes::NE));
+        // EQ should pass, NE should not
+        assert!(cpu.check_condition(Arm7ConditionCodes::EQ));
+        assert!(!cpu.check_condition(Arm7ConditionCodes::NE));
+    }
 }

@@ -1,7 +1,4 @@
 pub struct Memory {
-    // ALE [32:31]
-    // Address [31:0]
-    // ABE [0:]
     bios: Vec<u8>,
     ext: Vec<u8>,
     ram: Vec<u8>,
@@ -14,9 +11,6 @@ pub struct Memory {
 }
 
 impl Memory {
-    // These are the actual sizes, but WebAssembly doesn't allocate enough
-    // memory by default, so we need to figure out how to allocate more within
-    // Webpack/Parcel/just say fuck it and not use either of them.
     const BIOS_START: usize = 0x0000_0000;
     const BIOS_SIZE: usize = 16 * 1024;
     const BIOS_END: usize = Self::BIOS_START + Self::BIOS_SIZE;
@@ -41,40 +35,45 @@ impl Memory {
     pub const VRAM_SIZE: usize = 96 * 1024;
     pub const VRAM_END: usize = Self::VRAM_START + Self::VRAM_SIZE;
 
-    const OBJECT_START: usize = 0x0700_0000;
-    const OBJECT_SIZE: usize = 1024;
-    const OBJECT_END: usize = Self::OBJECT_START + Self::OBJECT_SIZE;
+    const OBJECT_ATTRIBUTE_START: usize = 0x0700_0000;
+    const OBJECT_ATTRIBUTE_SIZE: usize = 1024;
+    const OBJECT_ATTRIBUTE_END: usize = Self::OBJECT_ATTRIBUTE_START + Self::OBJECT_ATTRIBUTE_SIZE;
 
-    const ROM_START: usize = 0x0800_0000;
-    const ROM_SIZE: usize = 32 * 1024 * 1024;
-    const ROM_END: usize = Self::ROM_START + Self::ROM_SIZE;
+    pub const ROM_START: usize = 0x0800_0000;
+    pub const ROM_SIZE: usize = 32 * 1024 * 1024;
+    pub const ROM_END: usize = Self::ROM_START + Self::ROM_SIZE;
 
     const SAVE_START: usize = 0x0e00_0000;
     const SAVE_SIZE: usize = 64 * 1024;
     const SAVE_END: usize = Self::SAVE_START + Self::SAVE_SIZE;
 
-    pub fn init() -> Memory {
-        // Pages are 64kb.
-        // Memory (excluding the rom) is 8 pages.
-        Memory {
+    pub fn init() -> Self {
+        let mut memory = Self {
             bios: vec![0; Self::BIOS_SIZE],
             ext: vec![0; Self::EXT_SIZE],
             ram: vec![0; Self::RAM_SIZE],
             io: vec![0; Self::IO_SIZE],
             palette: vec![0; Self::PALETTE_SIZE],
             vram: vec![0; Self::VRAM_SIZE],
-            object: vec![0; Self::OBJECT_SIZE],
+            object: vec![0; Self::OBJECT_ATTRIBUTE_SIZE],
             rom: vec![0; 1],
             save: vec![0; Self::SAVE_SIZE],
+        };
+
+        // Copy the BIOS into memory
+        for each in 0..BIOS.len() {
+            memory.bios[each] = BIOS[each];
         }
+
+        memory
     }
 
     pub fn read_word(&self, address: u32) -> u32 {
         assert_eq!(address % 4, 0);
 
-        let mut accumulator = self.read_byte(address) as u32;
+        let mut accumulator = u32::from(self.read_byte(address));
         for each in 1..4 {
-            accumulator += (self.read_byte(address + each) as u32) << each * 8;
+            accumulator += u32::from(self.read_byte(address + each)) << each * 8;
         }
 
         accumulator
@@ -88,19 +87,10 @@ impl Memory {
         }
     }
 
-    // pub fn read_word_be(&self, address: u32) -> u32 {
-    //     assert_eq!(address % 4, 0);
-    //     0
-    // }
-
-    // pub fn write_word_be(&mut self, address: u32, value: u32) {
-    //     assert_eq!(address % 4, 0);
-    // }
-
     pub fn read_half_word(&self, address: u32) -> u16 {
         assert_eq!(address % 2, 0);
 
-        self.read_byte(address) as u16 + ((self.read_byte(address + 1) as u16) << 8)
+        u16::from(self.read_byte(address)) + (u16::from(self.read_byte(address + 1)) << 8)
     }
 
     pub fn write_half_word(&mut self, address: u32, value: u16) {
@@ -109,15 +99,6 @@ impl Memory {
         self.write_byte(address, (value & 0xff) as u8);
         self.write_byte(address + 1, (value >> 8 & 0xff) as u8);
     }
-
-    // pub fn read_half_word_be(&self, address: u32) -> u16 {
-    //     assert_eq!(address % 2, 0);
-    //     0
-    // }
-
-    // pub fn write_half_word_be(&mut self, address: u32, value: u16) {
-    //     assert_eq!(address % 2, 0);
-    // }
 
     pub fn read_byte(&self, address: u32) -> u8 {
         let i = address as usize;
@@ -129,7 +110,9 @@ impl Memory {
             Self::IO_START..=Self::IO_END => self.io[i - Self::IO_START],
             Self::PALETTE_START..=Self::PALETTE_END => self.palette[i - Self::PALETTE_START],
             Self::VRAM_START..=Self::VRAM_END => self.vram[i - Self::VRAM_START],
-            Self::OBJECT_START..=Self::OBJECT_END => self.object[i - Self::OBJECT_START],
+            Self::OBJECT_ATTRIBUTE_START..=Self::OBJECT_ATTRIBUTE_END => {
+                self.object[i - Self::OBJECT_ATTRIBUTE_START]
+            }
             Self::ROM_START..=Self::ROM_END => self.rom[i - Self::ROM_START],
             Self::SAVE_START..=Self::SAVE_END => self.save[i - Self::SAVE_START],
             _ => 0,
@@ -140,7 +123,8 @@ impl Memory {
         let i = address as usize;
 
         match i {
-            Self::BIOS_START..=Self::BIOS_END => self.bios[i] = value,
+            // We probably don't want to allow people to write to the bios.
+            // Self::BIOS_START..=Self::BIOS_END => self.bios[i] = value,
             Self::EXT_START..=Self::EXT_END => self.ext[i - Self::EXT_START] = value,
             Self::RAM_START..=Self::RAM_END => self.ram[i - Self::RAM_START] = value,
             Self::IO_START..=Self::IO_END => self.io[i - Self::IO_START] = value,
@@ -148,7 +132,9 @@ impl Memory {
                 self.palette[i - Self::PALETTE_START] = value
             }
             Self::VRAM_START..=Self::VRAM_END => self.vram[i - Self::VRAM_START] = value,
-            Self::OBJECT_START..=Self::OBJECT_END => self.object[i - Self::OBJECT_START] = value,
+            Self::OBJECT_ATTRIBUTE_START..=Self::OBJECT_ATTRIBUTE_END => {
+                self.object[i - Self::OBJECT_ATTRIBUTE_START] = value
+            }
             Self::ROM_START..=Self::ROM_END => self.rom[i - Self::ROM_START] = value,
             Self::SAVE_START..=Self::SAVE_END => self.save[i - Self::SAVE_START] = value,
             _ => (),
@@ -156,33 +142,87 @@ impl Memory {
     }
 }
 
-#[test]
-fn write_to_ram() {
-    let mut memory = Memory::init();
+pub const BIOS: [u8; 548] = [
+    0x06, 0x00, 0x00, 0xea, 0xfe, 0xff, 0xff, 0xea, 0x0b, 0x00, 0x00, 0xea, 0xfe, 0xff, 0xff, 0xea,
+    0xfe, 0xff, 0xff, 0xea, 0x00, 0x00, 0xa0, 0xe1, 0x2c, 0x00, 0x00, 0xea, 0xfe, 0xff, 0xff, 0xea,
+    0x02, 0x03, 0xa0, 0xe3, 0x03, 0x10, 0xd0, 0xe5, 0xea, 0x00, 0x51, 0xe3, 0xec, 0x01, 0x9f, 0x15,
+    0x10, 0xff, 0x2f, 0xe1, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x29, 0xe1, 0x00, 0x00, 0x5d, 0xe3,
+    0x01, 0xd3, 0xa0, 0x03, 0x20, 0xd0, 0x4d, 0x02, 0x00, 0x58, 0x2d, 0xe9, 0x02, 0xb0, 0x5e, 0xe5,
+    0x9c, 0xc0, 0xa0, 0xe3, 0x0b, 0xb1, 0x9c, 0xe7, 0x00, 0x00, 0x5b, 0xe3, 0x00, 0xc0, 0x4f, 0xe1,
+    0x00, 0x10, 0x2d, 0xe9, 0x80, 0xc0, 0x0c, 0xe2, 0x1f, 0xc0, 0x8c, 0xe3, 0x0c, 0xf0, 0x29, 0xe1,
+    0x00, 0x40, 0x2d, 0xe9, 0x0f, 0xe0, 0xa0, 0xe1, 0x1b, 0xff, 0x2f, 0x11, 0x00, 0x40, 0xbd, 0xe8,
+    0x93, 0xf0, 0x29, 0xe3, 0x00, 0x10, 0xbd, 0xe8, 0x0c, 0xf0, 0x69, 0xe1, 0x00, 0x58, 0xbd, 0xe8,
+    0x0e, 0xf0, 0xb0, 0xe1, 0x00, 0x00, 0x00, 0x00, 0x04, 0x20, 0xa0, 0xe3, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0x00, 0x00, 0x00,
+    0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xc8, 0x01, 0x00, 0x00,
+    0x0f, 0x50, 0x2d, 0xe9, 0x01, 0x03, 0xa0, 0xe3, 0x00, 0xe0, 0x8f, 0xe2, 0x04, 0xf0, 0x10, 0xe5,
+    0x0f, 0x50, 0xbd, 0xe8, 0x04, 0xf0, 0x5e, 0xe2, 0x00, 0x00, 0x00, 0x00, 0x02, 0xc0, 0x5e, 0xe5,
+    0x01, 0x00, 0xa0, 0xe3, 0x01, 0x10, 0xa0, 0xe3, 0x0c, 0x40, 0x2d, 0xe9, 0x01, 0xc3, 0xa0, 0xe3,
+    0x00, 0x00, 0x50, 0xe3, 0x00, 0x00, 0xa0, 0xe3, 0x01, 0x20, 0xa0, 0xe3, 0x03, 0x00, 0x00, 0x0a,
+    0xb8, 0x30, 0x5c, 0xe1, 0x01, 0x30, 0xc3, 0xe1, 0xb8, 0x30, 0x4c, 0xe1, 0x01, 0x03, 0xcc, 0xe5,
+    0x08, 0x02, 0xcc, 0xe5, 0xb8, 0x30, 0x5c, 0xe1, 0x01, 0x30, 0x13, 0xe0, 0x01, 0x30, 0x23, 0x10,
+    0xb8, 0x30, 0x4c, 0x11, 0x08, 0x22, 0xcc, 0xe5, 0xf7, 0xff, 0xff, 0x0a, 0x0c, 0x80, 0xbd, 0xe8,
+    0x00, 0x40, 0x2d, 0xe9, 0x02, 0x36, 0xa0, 0xe1, 0x01, 0x04, 0x12, 0xe3, 0x0f, 0x00, 0x00, 0x0a,
+    0x01, 0x03, 0x12, 0xe3, 0x05, 0x00, 0x00, 0x0a, 0x23, 0x35, 0x81, 0xe0, 0x04, 0x00, 0xb0, 0xe8,
+    0x03, 0x00, 0x51, 0xe1, 0x04, 0x00, 0xa1, 0xb8, 0xfc, 0xff, 0xff, 0xba, 0x14, 0x00, 0x00, 0xea,
+    0x01, 0x00, 0xc0, 0xe3, 0x01, 0x10, 0xc1, 0xe3, 0xa3, 0x35, 0x81, 0xe0, 0xb0, 0x20, 0xd0, 0xe1,
+    0x03, 0x00, 0x51, 0xe1, 0xb2, 0x20, 0xc1, 0xb0, 0xfc, 0xff, 0xff, 0xba, 0x0c, 0x00, 0x00, 0xea,
+    0x01, 0x03, 0x12, 0xe3, 0x05, 0x00, 0x00, 0x0a, 0x23, 0x35, 0x81, 0xe0, 0x03, 0x00, 0x51, 0xe1,
+    0x04, 0x00, 0xb0, 0xb8, 0x04, 0x00, 0xa1, 0xb8, 0xfb, 0xff, 0xff, 0xba, 0x04, 0x00, 0x00, 0xea,
+    0xa3, 0x35, 0x81, 0xe0, 0x03, 0x00, 0x51, 0xe1, 0xb2, 0x20, 0xd0, 0xb0, 0xb2, 0x20, 0xc1, 0xb0,
+    0xfb, 0xff, 0xff, 0xba, 0x00, 0x80, 0xbd, 0xe8, 0xf0, 0x47, 0x2d, 0xe9, 0x01, 0x04, 0x12, 0xe3,
+    0x02, 0x36, 0xa0, 0xe1, 0x23, 0x25, 0x81, 0xe0, 0x0b, 0x00, 0x00, 0x0a, 0x00, 0x30, 0x90, 0xe5,
+    0x03, 0x40, 0xa0, 0xe1, 0x03, 0x50, 0xa0, 0xe1, 0x03, 0x60, 0xa0, 0xe1, 0x03, 0x70, 0xa0, 0xe1,
+    0x03, 0x80, 0xa0, 0xe1, 0x03, 0x90, 0xa0, 0xe1, 0x03, 0xa0, 0xa0, 0xe1, 0x02, 0x00, 0x51, 0xe1,
+    0xf8, 0x07, 0xa1, 0xb8, 0xfc, 0xff, 0xff, 0xba, 0x03, 0x00, 0x00, 0xea, 0x02, 0x00, 0x51, 0xe1,
+    0xf8, 0x07, 0xb0, 0xb8, 0xf8, 0x07, 0xa1, 0xb8, 0xfb, 0xff, 0xff, 0xba, 0xf0, 0x87, 0xbd, 0xe8,
+    0xc0, 0x00, 0x00, 0x02,
+];
 
-    // Write into interal ram
-    let offset = Memory::RAM_START as u32;
-    memory.write_word(offset, 0x01020304);
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    // Test that it is stored correctly
-    assert_eq!(memory.ram[0], 4);
-    assert_eq!(memory.ram[1], 3);
-    assert_eq!(memory.ram[2], 2);
-    assert_eq!(memory.ram[3], 1);
-}
+    #[test]
+    fn cant_write_to_bios() {
+        // We have to declare it as mutable so that write_word can borrow it
+        // as mutable, even though we shouldn't actually mutate it.
+        let mut memory = Memory::init();
 
-#[test]
-fn read_from_ram() {
-    let mut memory = Memory::init();
+        assert_eq!(memory.read_word(0), 0xea000006);
+        memory.write_word(0, 0xdeadbeef);
+        assert_eq!(memory.read_word(0), 0xea000006);
+    }
 
-    // Write into interal ram
-    let offset = Memory::RAM_START as u32;
-    memory.write_word(offset, 0x01020304);
+    #[test]
+    fn write_to_ram() {
+        let mut memory = Memory::init();
 
-    // Test that we read it out properly
-    assert_eq!(0x01020304, memory.read_word(offset));
-    assert_eq!(0x0304, memory.read_half_word(offset));
-    assert_eq!(0x0102, memory.read_half_word(offset + 2));
-    assert_eq!(0x04, memory.read_byte(offset));
-    assert_eq!(0x03, memory.read_byte(offset + 1));
+        // Write into interal ram
+        let offset = Memory::RAM_START as u32;
+        memory.write_word(offset, 0x01020304);
+
+        // Test that it is stored correctly
+        assert_eq!(memory.ram[0], 4);
+        assert_eq!(memory.ram[1], 3);
+        assert_eq!(memory.ram[2], 2);
+        assert_eq!(memory.ram[3], 1);
+    }
+
+    #[test]
+    fn read_from_ram() {
+        let mut memory = Memory::init();
+
+        // Write into interal ram
+        let offset = Memory::RAM_START as u32;
+        memory.write_word(offset, 0x01020304);
+
+        // Test that we read it out properly
+        assert_eq!(0x01020304, memory.read_word(offset));
+        assert_eq!(0x0304, memory.read_half_word(offset));
+        assert_eq!(0x0102, memory.read_half_word(offset + 2));
+        assert_eq!(0x04, memory.read_byte(offset));
+        assert_eq!(0x03, memory.read_byte(offset + 1));
+    }
 }

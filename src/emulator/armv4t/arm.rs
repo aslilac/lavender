@@ -5,7 +5,7 @@ use crate::emulator::{
     cpu::{Arm7OperationModes::*, Arm7RegisterNames::*, *},
     Emulator,
 };
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 pub fn process_instruction(emulator: &mut Emulator, instruction: u32) {
     // [27:20] and [7:4] are decode bits
@@ -35,21 +35,7 @@ pub fn process_instruction(emulator: &mut Emulator, instruction: u32) {
         // Branch
         // 0b1010 - no link
         // 0b1011 - link
-        0b101 => {
-            let link = instruction >> 24 & 1;
-            let shift = instruction & 0xffffff;
-            log!("Hit a branch instruction with link {}", link);
-            log!("Shifting by {}", shift);
-            if link > 0 {
-                log!("Setting r14 to return back");
-                // r15 is safe to access directly because it isn't branched,
-                // but r14 is branched so we much use set_register_value
-                emulator
-                    .cpu
-                    .set_register_value(r14, emulator.cpu.registers.r15);
-            }
-            emulator.cpu.registers.r15 += shift;
-        }
+        0b101 => branch(emulator, instruction),
         // Coprocessor load/store and double register transfers
         0b110 => (),
         // Coprocessor data processing
@@ -62,13 +48,9 @@ pub fn process_instruction(emulator: &mut Emulator, instruction: u32) {
     }
 }
 
-pub fn data_processing_immediate_shift(emulator: &mut Emulator, instruction: u32) {
+pub fn data_processing_immediate_shift(emulator: &mut Emulator, instruction: u32) {}
 
-}
-
-pub fn data_processing_register_shift(emulator: &mut Emulator, instruction: u32) {
-
-}
+pub fn data_processing_register_shift(emulator: &mut Emulator, instruction: u32) {}
 
 pub fn data_processing_immediate(emulator: &mut Emulator, instruction: u32) {
     // let immediate = instruction >> 25 & 1;
@@ -116,7 +98,35 @@ pub fn data_processing_immediate(emulator: &mut Emulator, instruction: u32) {
 }
 
 pub fn ls_immediate_offset(emulator: &mut Emulator, instruction: u32) {
-  let Emulator{ cpu, memory } = emulator;
+    let Emulator { cpu, memory } = emulator;
+}
+
+pub fn branch(emulator: &mut Emulator, instruction: u32) {
+    // If this bit is set, then we need to set r14 = r15 before
+    // actually branching.
+    let link = instruction >> 24 & 1;
+    // See if the number is negative or not.
+    let direction = instruction >> 23 & 1;
+
+    // The shift amount is a 24 bit two's complement integer. This is
+    // all just a very complicated way to convert it to the proper 32 bit
+    // two's complement integer format. We still store it as an unsigned
+    // integer because otherwise Rust won't let us add them together.
+    let shift = if direction > 0 {
+        instruction & 0x7fffff | 0x3f80_0000
+    } else {
+        instruction & 0x7fffff
+    } << 2;
+
+    if link > 0 {
+        // r15 is safe to access directly because it isn't branched,
+        // but r14 is branched so we much use set_register_value
+        emulator
+            .cpu
+            .set_register_value(r14, emulator.cpu.registers.r15);
+    }
+
+    emulator.cpu.registers.r15 = emulator.cpu.registers.r15.wrapping_add(shift);
 }
 
 // Move
