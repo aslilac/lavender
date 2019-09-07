@@ -18,8 +18,6 @@ function enable_drawing( ioAddress, vramAddress ) {
   _2d.fillStyle = '#ffffff';
   _2d.fillRect( 0, 0, 240, 160 );
 
-  const image = _2d.createImageData( 240, 160 );
-
   function render() {
     const beginning = Date.now();
 
@@ -27,37 +25,50 @@ function enable_drawing( ioAddress, vramAddress ) {
     const vram = new Uint8Array( window.memory.buffer.slice( vramAddress, vramAddress + 96 * 1024 ) );
 
     const displayMode = io[0] + (io[1] << 8);
-    const data = image.data;
-    const height = image.height;
-    const width = image.width;
+
+    // Eventually all of the computation needs to either be done in Rust or GLSL,
+    // with JavaScript only serving to pass values inbetween the two of them.
+    // The end total amount of JavaScript should be essentially negligable.
 
     // We currently just kind of assume that the display is in mode three. We
     // probably need to knock that off at somepoint.
-    for ( let i = 0; i < 240 * 160; i++ ) {
-      // Convert the 15 bit rgb colors stored in memory to 32 bit rgba colors.
-      const rgb15 = vram[ i * 2 ] + (vram[ i * 2 + 1 ] << 8);
+    // for ( let i = 0; i < 240 * 160; i++ ) {
+    //   // Convert the 15 bit rgb colors stored in memory to 32 bit rgba colors.
 
-      data[ i * 4 ] = (rgb15 & 0x001f) * 8;
-      data[ i * 4 + 1 ] = ((rgb15 & 0x03e0) >> 5) * 8;
-      data[ i * 4 + 2 ] = ((rgb15 & 0x7c00) >> 10) * 8;
-      data[ i * 4 + 3 ] = 255;
-    }
+    //   data[ i * 4 ] = ;
+    //   data[ i * 4 + 1 ] = ;
+    //   data[ i * 4 + 2 ] = ;
+    //   data[ i * 4 + 3 ] = 255;
+    // }
 
     // Frankly, this is just....bad.  It's incredibly slow, but the built in
     // putImageData doesn't have any scaling support. WebGL will be so much
     // better when I get that backend working properly, but in the mean time this
     // allows development to continue on other parts of the emulator, at least
     // until it becomes a bottleneck (it already is, with frame times of ~24ms).
-    for ( let y = 0; y < height; y++ ) {
-      for ( let x = 0; x < width; x++ ) {
-        const i = y * width + x;
+    let prevColor = null
+    for ( let y = 0; y < 160; y++ ) {
+      let beginX = 0;
 
-        _2d.fillStyle = 'rgba(' + data[ i * 4 ]
-                          + ',' + data[ i * 4 + 1 ]
-                          + ',' + data[ i * 4 + 2 ]
-                          + ', 1)';
-        _2d.fillRect( x, y, 1.2, 1.2 );
+      for ( let x = 0; x < 240; x++ ) {
+        const i = y * 240 + x;
+        const rgb15 = vram[ i * 2 ] + (vram[ i * 2 + 1 ] << 8);
+
+        if ( rgb15 !== prevColor ) {
+          // Draw the rectangle before we change colors
+          _2d.fillRect( beginX, y, x - beginX + 0.2, 1.2 );
+
+          _2d.fillStyle = 'rgba(' + (rgb15 & 0x001f) * 8
+                            + ',' + (rgb15 >> 5 & 0x001f) * 8
+                            + ',' + (rgb15 >> 10 & 0x001f) * 8
+                            + ', 1)';
+          prevColor = rgb15;
+          beginX = x;
+        }
       }
+
+      // Draw to the end of the line.
+      _2d.fillRect( beginX, y, 240.2 - beginX, 1.2 );
     }
 
     output.innerHTML = `Frame: ${frame++}\nFrame time: ${Date.now()-beginning}ms\nDisplay mode: 0x${displayMode.toString(16)}`;
