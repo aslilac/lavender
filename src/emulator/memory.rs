@@ -1,51 +1,67 @@
 pub struct Memory {
-    bios: Vec<u8>,
-    ext: Vec<u8>,
-    ram: Vec<u8>,
+    /// Stores the BIOS of the Game Boy Advance, which is home to the software
+    /// interupt table and some useful methods that there are not instructions for.
+    pub bios: Vec<u8>,
+    /// Links to the RAM made available by the external cartiridge.
+    pub ext: Vec<u8>,
+    /// Links to the RAM that is embedded into the CPU.
+    pub ram: Vec<u8>,
+    /// Address space for the memory mapped IO registers.
     pub io: Vec<u8>,
-    palette: Vec<u8>,
+    /// Contains color palette information for the display modes that use palettes.
+    pub palette: Vec<u8>,
+    /// The video memory which contains background layer information or bitmaps
+    /// depending on the display mode.
     pub vram: Vec<u8>,
-    object: Vec<u8>,
+    /// Object attribute memory, or a more familiar description might be
+    /// sprite properties. Contains information relating to the object/sprite
+    /// layer for layered display modes.
+    pub object: Vec<u8>,
+    /// The ROM memory of the currently inserted cartridge.
     pub rom: Vec<u8>,
-    save: Vec<u8>,
+    /// The writtable save memory inside of the cartridge is mappen here. The
+    /// contents of this memory are copied out exactly as is when creating a
+    /// save state.
+    pub save: Vec<u8>,
 }
 
 impl Memory {
-    const BIOS_START: usize = 0x0000_0000;
-    const BIOS_SIZE: usize = 16 * 1024;
-    const BIOS_END: usize = Self::BIOS_START + Self::BIOS_SIZE;
+    pub const BIOS_START: usize = 0x0000_0000;
+    pub const BIOS_SIZE: usize = 16 * 1024;
+    pub const BIOS_END: usize = Self::BIOS_START + Self::BIOS_SIZE;
 
-    const EXT_START: usize = 0x0200_0000;
-    const EXT_SIZE: usize = 256 * 1024;
-    const EXT_END: usize = Self::EXT_START + Self::EXT_SIZE;
+    pub const EXT_START: usize = 0x0200_0000;
+    pub const EXT_SIZE: usize = 256 * 1024;
+    pub const EXT_END: usize = Self::EXT_START + Self::EXT_SIZE;
 
-    const RAM_START: usize = 0x0300_0000;
-    const RAM_SIZE: usize = 32 * 1024;
-    const RAM_END: usize = Self::RAM_START + Self::RAM_SIZE;
+    pub const RAM_START: usize = 0x0300_0000;
+    pub const RAM_SIZE: usize = 32 * 1024;
+    pub const RAM_END: usize = Self::RAM_START + Self::RAM_SIZE;
 
     pub const IO_START: usize = 0x0400_0000;
     pub const IO_SIZE: usize = 1024;
     pub const IO_END: usize = Self::IO_START + Self::IO_SIZE;
 
-    const PALETTE_START: usize = 0x0500_0000;
-    const PALETTE_SIZE: usize = 1024;
-    const PALETTE_END: usize = Self::PALETTE_START + Self::PALETTE_SIZE;
+    pub const PALETTE_START: usize = 0x0500_0000;
+    pub const PALETTE_SIZE: usize = 1024;
+    pub const PALETTE_END: usize = Self::PALETTE_START + Self::PALETTE_SIZE;
 
     pub const VRAM_START: usize = 0x0600_0000;
     pub const VRAM_SIZE: usize = 96 * 1024;
     pub const VRAM_END: usize = Self::VRAM_START + Self::VRAM_SIZE;
 
-    const OBJECT_ATTRIBUTE_START: usize = 0x0700_0000;
-    const OBJECT_ATTRIBUTE_SIZE: usize = 1024;
-    const OBJECT_ATTRIBUTE_END: usize = Self::OBJECT_ATTRIBUTE_START + Self::OBJECT_ATTRIBUTE_SIZE;
+    pub const OBJECT_ATTRIBUTE_START: usize = 0x0700_0000;
+    pub const OBJECT_ATTRIBUTE_SIZE: usize = 1024;
+    pub const OBJECT_ATTRIBUTE_END: usize =
+        Self::OBJECT_ATTRIBUTE_START + Self::OBJECT_ATTRIBUTE_SIZE;
 
     pub const ROM_START: usize = 0x0800_0000;
     pub const ROM_SIZE: usize = 32 * 1024 * 1024;
     pub const ROM_END: usize = Self::ROM_START + Self::ROM_SIZE;
 
-    const SAVE_START: usize = 0x0e00_0000;
-    const SAVE_SIZE: usize = 64 * 1024;
-    const SAVE_END: usize = Self::SAVE_START + Self::SAVE_SIZE;
+    pub const SAVE_START: usize = 0x0e00_0000;
+    pub const SAVE_SIZE: usize = 64 * 1024;
+    pub const SAVE_END: usize = Self::SAVE_START + Self::SAVE_SIZE;
 
     pub fn init() -> Self {
         let mut memory = Self {
@@ -66,6 +82,20 @@ impl Memory {
         }
 
         memory
+    }
+
+    pub fn init_small_no_bios() -> Self {
+        Self {
+            bios: vec![0; 32],
+            ext: vec![0; 32],
+            ram: vec![0; 32],
+            io: vec![0; 32],
+            palette: vec![0; 32],
+            vram: vec![0; 32],
+            object: vec![0; 32],
+            rom: vec![0; 1],
+            save: vec![0; 32],
+        }
     }
 
     pub fn read_word(&self, address: u32) -> u32 {
@@ -224,5 +254,17 @@ mod tests {
         assert_eq!(0x0102, memory.read_half_word(offset + 2));
         assert_eq!(0x04, memory.read_byte(offset));
         assert_eq!(0x03, memory.read_byte(offset + 1));
+    }
+
+    #[test]
+    fn write_half_word_to_vram() {
+        let mut memory = Memory::init();
+
+        // Initialize memory and set a red pixel
+        let offset = Memory::VRAM_START as u32;
+        memory.write_half_word(offset, 0x001f);
+
+        // Make sure that the red pixel has the correct value
+        assert_eq!(memory.read_half_word(offset), 0x001f);
     }
 }

@@ -1,4 +1,4 @@
-mod armv4t;
+pub mod armv4t;
 pub mod cpu;
 mod io;
 pub mod memory;
@@ -24,6 +24,13 @@ impl Emulator {
         Self {
             cpu: Arm7Tdmi::init(),
             memory: Memory::init(),
+        }
+    }
+
+    pub fn dummy() -> Self {
+        Self {
+            cpu: Arm7Tdmi::init(),
+            memory: Memory::init_small_no_bios(),
         }
     }
 
@@ -59,36 +66,26 @@ impl Emulator {
         use Arm7RegisterNames::*;
 
         // Addition test
-        {
-            // Initialize r3 as the accumulator and r4 as the amount to add
-            self.cpu.set_register_value(r3, 0);
-            self.cpu.set_register_value(r4, 1);
+        // {
+        //     // Initialize r3 as the accumulator and r4 as the amount to add
+        //     self.cpu.set_register_value(r3, 0);
+        //     self.cpu.set_register_value(r4, 1);
 
-            // Run a basic (arm) adding instruction in a loop
-            for _ in 0..10 {
-                // ADD r3, r3, r4 (or something like that I think)
-                arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0100_00000000);
-            }
+        //     // Run a basic (arm) adding instruction in a loop
+        //     for _ in 0..10 {
+        //         // add r3, r3, r4 (or something like that I think)
+        //         arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0100_00000000);
+        //     }
 
-            // Assert that the adding completed correctly
-            assert_eq!(self.cpu.get_register_value(r3), 10);
-        }
+        //     // Assert that the adding completed correctly
+        //     assert_eq!(self.cpu.get_register_value(r3), 10);
+        // }
 
-        // Test branch instruction decoding
-        // Link with distance of 0
-        arm::process_instruction(self, 0b1110_101_1_0000_0000_0000_0000_0000_0000);
-        arm::process_instruction(self, 0b1110_101_1_0111_1111_1111_1111_1111_1111);
-
-        log!("Before subtracting 4 from pc: {}", self.cpu.registers.r15);
-        arm::process_instruction(self, 0b1110_101_1_1111_1111_1111_1111_1111_1111);
-        log!("After subtracting 4 from pc: {}", self.cpu.registers.r15);
-        // arm::process_instruction(self, 0b1110_101_1_1000_0000_0000_0000_0000_0000);
-
-        let i: i32 = 1;
-        log!("i has a value {}", i << 31);
+        // adc r3, r3, #0xf000000f
+        arm::process_instruction(self, 0b1110_001_0101_1_0011_0011_1110_11111111);
 
         // Test thumb (??????) instruction decoding
-        thumb::process_instruction(self, 0b0000_0000_0000_0000);
+        // thumb::process_instruction(self, 0b0000_0000_0000_0000);
 
         // Make sure the rom is correctly loaded into memory
         assert_eq!(self.memory.read_byte(0x0800_0000), self.memory.rom[0]);
@@ -110,13 +107,6 @@ impl Emulator {
                 .write_half_word(0x0600_0000 + (136 + 80 * 240) * 2, 0x03E0);
             self.memory
                 .write_half_word(0x0600_0000 + (120 + 96 * 240) * 2, 0x7C00);
-
-            // Make sure that the red pixel has the correct value (the rest probably do to)
-            assert_eq!(
-                self.memory
-                    .read_half_word(0x0600_0000 + (120 + 80 * 240) * 2),
-                31
-            );
         }
 
         log!("Emulator started successfully!");

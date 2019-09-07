@@ -9,7 +9,7 @@
     - [Instruction encoding](isa.md)
     - [Build a disassembler](disassembly.md)
     - [Building the debugger interface](debugging.md)
-- [Memory Layout](mem.md)
+- [Memory Layout](memory.md)
 - [BIOS](bios.md)
 - [ROM file layouts](roms.md)
 - [Interacting with the outside world](interaction.md)

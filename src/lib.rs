@@ -1,4 +1,4 @@
-mod emulator;
+pub mod emulator;
 
 use emulator::Emulator;
 use wasm_bindgen::prelude::*;

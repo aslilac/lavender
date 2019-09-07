@@ -1,11 +1,7 @@
 #[macro_use]
 use crate::log;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use std::{
-    convert::TryFrom,
-    default::Default,
-    num::Wrapping,
-};
+use std::convert::TryFrom;
 
 pub struct Arm7Tdmi {
     pub frequency: u32,
@@ -187,10 +183,18 @@ impl Arm7Tdmi {
     pub fn set_nzcv(&mut self, n: bool, z: bool, c: bool, v: bool) {
         let mut flags = 0;
 
-        if n { flags |= 0x8 }
-        if z { flags |= 0x4 }
-        if c { flags |= 0x2 }
-        if v { flags |= 0x1 }
+        if n {
+            flags |= 0x8
+        }
+        if z {
+            flags |= 0x4
+        }
+        if c {
+            flags |= 0x2
+        }
+        if v {
+            flags |= 0x1
+        }
 
         self.registers.cpsr = (self.registers.cpsr & 0x0fffffff) | (flags << 28);
     }
@@ -376,9 +380,10 @@ pub enum Arm7OperationModes {
     UND = 0b11011, // Undefined, entered from invalid opcodes
 }
 
-// These are just the names, not the actual register values. They are used
-// in conjunction with the {get,set}_register_value functions to automatically
-// handle using the correct register for the execution mode.
+/// An enum of the register names available to the processor. These names can be
+/// used in the `get_register_value` and `set_register_value` functions to ensure
+/// that the register being accessed is the correct one for the current execution
+/// mode. (r14 maps to r14_irq when in irq execution, etc.)
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u32)]
@@ -430,7 +435,7 @@ pub enum Arm7ConditionCodes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn set_frequency() {
         let mut cpu = Arm7Tdmi::init();

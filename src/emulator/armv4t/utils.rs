@@ -1,11 +1,4 @@
-#[macro_use]
-use crate::{
-    emulator::{
-        cpu::{Arm7OperationModes::*, Arm7RegisterNames::*, *},
-        Emulator,
-    },
-    log,
-};
+use crate::emulator::{cpu::*, Emulator};
 use std::convert::TryFrom;
 
 pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32 {
@@ -26,9 +19,9 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
         // Determine if we need to fetch the shift amount from the register
         let is_register_shift = instruction >> 4 & 1 > 0;
         // Get the value from the register
-        let value = emulator.cpu.get_register_value(
-            Arm7RegisterNames::try_from(instruction & 15).unwrap()
-        );
+        let value = emulator
+            .cpu
+            .get_register_value(Arm7RegisterNames::try_from(instruction & 15).unwrap());
 
         let shift = if is_register_shift {
             // Check to make sure that extension space instructions don't end
@@ -42,9 +35,9 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
 
             // Anything above the bottom 8 bits should be ignored (because they
             // wouldn't matter anyway)
-            0xff & emulator.cpu.get_register_value(
-                Arm7RegisterNames::try_from(instruction >> 8 & 15).unwrap()
-            )
+            0xff & emulator
+                .cpu
+                .get_register_value(Arm7RegisterNames::try_from(instruction >> 8 & 15).unwrap())
         } else {
             instruction >> 7 & 0x1f
         };
@@ -63,13 +56,17 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
 
 pub fn get_data_processing_operands(
     emulator: &mut Emulator,
-    instruction: u32
+    instruction: u32,
 ) -> (Arm7RegisterNames, u32, u32) {
     let destination_register = Arm7RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
-    let operand_register_value = emulator.cpu.get_register_value(
-        Arm7RegisterNames::try_from(instruction >> 16 & 0xf).unwrap()
-    );
+    let operand_register_value = emulator
+        .cpu
+        .get_register_value(Arm7RegisterNames::try_from(instruction >> 16 & 0xf).unwrap());
     let shifter_operand_value = process_shifter_operand(emulator, instruction);
 
-    (destination_register, operand_register_value, shifter_operand_value)
+    (
+        destination_register,
+        operand_register_value,
+        shifter_operand_value,
+    )
 }
