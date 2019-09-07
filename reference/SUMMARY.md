@@ -6,7 +6,9 @@
 
 - [Technical Specifications](specs.md)
 - [CPU Architecture](arch.md)
-- [Instruction encoding](isa.md)
+    - [Instruction encoding](isa.md)
+    - [Build a disassembler](disassembly.md)
+    - [Building the debugger interface](debugging.md)
 - [Memory Layout](mem.md)
 - [BIOS](bios.md)
 - [ROM file layouts](roms.md)
