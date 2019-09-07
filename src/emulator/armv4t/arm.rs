@@ -49,22 +49,22 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) {
                 (0b0101, _, _) => adc,
                 (0b0110, _, 0b1001) => smull,
                 (0b0110, _, _) => sbc,
+                (0b0111, _, 0b1001) if category == 0 => smlal,
                 (0b0111, _, _) => rsc,
-                (0b1000, 0, _) | (0b1010, 0, _) if category == 0 => mrs,
-                // (0b1010, 0, 0b1yx0) if category == 0 => smlal,
                 (0b1000, 0, 0b1001) if category == 0 => swp,
+                (0b1010, 0, 0b1001) if category == 0 => swpb,
+                (0b1000, 0, _) | (0b1010, 0, _) if category == 0 => mrs,
                 (0b1000, _, _) => tst,
                 (0b1001, 0, 0b0001) if category == 0 => bx,
                 (0b1001, 0, _) | (0b1011, 0, _) => msr,
                 (0b1001, _, _) => teq,
-                (0b1010, 0, 0b1001) if category == 0 => swpb,
                 (0b1010, _, _) => cmp,
                 (0b1011, _, _) => cmn,
                 (0b1100, _, _) => or,
                 (0b1101, _, _) => mov,
                 (0b1110, _, _) => bic,
                 (0b1111, _, _) => mvn,
-                (_, _, _) => placeholder,
+                (_, _, _) => impossible,
             }
         },
         // Load/store
@@ -80,7 +80,7 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) {
                 (0, 1) => ldr,
                 (1, 1) => ldrb,
                 // (1, 1) => ldrbt, // plus 24 = 0, 21 = 1
-                (_, _) => placeholder,
+                (_, _) => impossible,
             }
         },
         // Media instructions + architecturally undefined (Figure A3-2)
@@ -95,10 +95,17 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) {
                 (0, 1) => ldm, // mode 1?
                 (1, 1) => ldm, // mode 2? plus 21 = 0 and 15 = 0
                 // (1, 1) => ldm, // mode 3? plus 15 = 1
-                (_, _) => placeholder,
+                (_, _) => impossible,
             }
         },
-        0b101 => branch,
+        // Branch instructions
+        0b101 => {
+            let link = instruction >> 24 & 1 > 0;
+            match link {
+                false => b,
+                true => bl,
+            }
+        },
         // Coprocessor load/store and double register transfers
         0b110 => {
             let load = instruction >> 20 & 1 > 0;
@@ -111,53 +118,26 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) {
         // Coprocessor register transfers
         // Software interupt
         0b111 => {
-            let direction = instruction >> 24 & 1;
-            let bottom = instruction >> 4 & 1;
-            match (direction, bottom) {
-                (0, 0) => cdp,
-                (0, 1) => mcr, // plus 20 = 0
-                // (0, 1) => mrc, // plus 20 = 1
-                (1, _) => swi,
-                (_, _) => placeholder,
+            let coprocessor_or_swi = instruction >> 24 & 1;
+            let direction = instruction >> 20 & 1;
+            let coprocessor_mov = instruction >> 4 & 1;
+            match (coprocessor_or_swi, direction, coprocessor_mov) {
+                (0, _, 0) => cdp,
+                (0, 0, 1) => mcr,
+                (0, 1, 1) => mrc,
+                (1, _, _) => swi,
+                (_, _, _) => impossible,
             }
         },
-        // Theoretically, this is impossible, but we don't have a way to tell the
-        // compiler that, so we have to have the case here anyway.
-        _ => placeholder,
+        _ => impossible,
     }
 }
 
-/// Handles the b and bl instructions
-pub fn branch(emulator: &mut Emulator, instruction: u32) {
-    let pc_value = emulator.cpu.get_register_value(r15);
-    // If this bit is set, then we need to set r14 = r15 before
-    // actually branching.
-    let link = instruction >> 24 & 1 > 0;
-    // See if the number is negative or not.
-    let negative = instruction >> 23 & 1 > 0;
-
-    // The shift amount is a 24 bit two's complement integer. This is
-    // all just a very complicated way to convert it to the proper 32 bit
-    // two's complement integer format. We still store it as an unsigned
-    // integer because otherwise Rust won't let us add them together.
-    let shift = if negative {
-        instruction & 0x7fffff | 0x3f80_0000
-    } else {
-        instruction & 0x7fffff
-    } << 2;
-
-    if link {
-        // r15 is safe to access directly because it isn't branched,
-        // but r14 is branched so we much use set_register_value
-        emulator.cpu.set_register_value(r14, pc_value);
-    }
-
-    emulator.cpu.set_register_value(r15, pc_value.wrapping_add(shift));
+pub fn impossible(_emulator: &mut Emulator, instruction: u32) {
+    panic!("Somehow hit impossible code path (instruction: {:x})", instruction);
 }
 
-pub fn placeholder(_emulator: &mut Emulator, instruction: u32) {
-    panic!("Received unsupported instruction {:x}", instruction);
-}
+
 
 pub fn adc(emulator: &mut Emulator, instruction: u32) {
     let carry_amount = if emulator.cpu.get_c() { 1 } else { 0 };
@@ -250,6 +230,23 @@ pub fn and(emulator: &mut Emulator, instruction: u32) {
     emulator.cpu.set_register_value(destination_register, result);
 }
 
+pub fn b(emulator: &mut Emulator, instruction: u32) {
+    let pc_value = emulator.cpu.get_register_value(r15);
+    let negative = instruction >> 23 & 1 > 0;
+
+    // The shift amount is a 26 bit two's complement integer stored in 24 bits.
+    // This is all just a very complicated way to convert it to the proper 32 bit
+    // two's complement integer format. We still store it as an unsigned
+    // integer because otherwise Rust won't let us add them together.
+    let shift = if negative {
+        instruction & 0x7fffff | 0x3f80_0000
+    } else {
+        instruction & 0x7fffff
+    } << 2;
+
+    emulator.cpu.set_register_value(r15, pc_value.wrapping_add(shift));
+}
+
 pub fn bic(emulator: &mut Emulator, instruction: u32) {
     let should_update_flags = instruction >> 20 & 1 > 0;
 
@@ -279,28 +276,43 @@ pub fn bic(emulator: &mut Emulator, instruction: u32) {
     emulator.cpu.set_register_value(destination_register, result);
 }
 
-pub fn bx(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn bl(emulator: &mut Emulator, instruction: u32) {
+    let pc_value = emulator.cpu.get_register_value(r15);
+    let negative = instruction >> 23 & 1 > 0;
 
-// ✅: Unit tested
-// 🆚: Mostly implemented
-// 🅾️: Not implemented
-pub fn cdp(_emulator: &mut Emulator, _instruction: u32) {} // ✅
-pub fn cmn(_emulator: &mut Emulator, _instruction: u32) {} // ✅
-pub fn cmp(_emulator: &mut Emulator, _instruction: u32) {} // ✅
-pub fn eor(_emulator: &mut Emulator, _instruction: u32) {} // ✅
-pub fn ldc(_emulator: &mut Emulator, _instruction: u32) {} // ✅
-pub fn ldm(_emulator: &mut Emulator, _instruction: u32) {} // ✅
-pub fn ldr(_emulator: &mut Emulator, _instruction: u32) {} // ✅
-pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+    // The shift amount is a 26 bit two's complement integer stored in 24 bits.
+    // This is all just a very complicated way to convert it to the proper 32 bit
+    // two's complement integer format. We still store it as an unsigned
+    // integer because otherwise Rust won't let us add them together.
+    let shift = if negative {
+        instruction & 0x7fffff | 0x3f80_0000
+    } else {
+        instruction & 0x7fffff
+    } << 2;
+
+    emulator.cpu.set_register_value(r14, pc_value);
+    emulator.cpu.set_register_value(r15, pc_value.wrapping_add(shift));
+}
+
+// 🆚: Not fully hooked
+pub fn bx(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn cdp(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn cmn(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn cmp(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn eor(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn ldc(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn ldm(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn ldr(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn ldrbt(_emulator: &mut Emulator, _instruction: u32) {}  // 🆚
-pub fn ldrh(_emulator: &mut Emulator, _instruction: u32) {} // ✅
-pub fn ldrsb(_emulator: &mut Emulator, _instruction: u32) {} // ✅
-pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn ldrh(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn ldrsb(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn ldrt(_emulator: &mut Emulator, _instruction: u32) {}  // 🆚
 pub fn mcr(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn mla(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn mov(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn mrc(_emulator: &mut Emulator, _instruction: u32) {}  // 🆚
+pub fn mrc(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn mrs(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn msr(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn mul(_emulator: &mut Emulator, _instruction: u32) {}
@@ -309,7 +321,7 @@ pub fn or(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn rsb(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn rsc(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn sbc(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn smlal(_emulator: &mut Emulator, _instruction: u32) {}  // 🆚
+pub fn smlal(_emulator: &mut Emulator, _instruction: u32) {} 
 pub fn smull(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn stc(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn stm(_emulator: &mut Emulator, _instruction: u32) {}
