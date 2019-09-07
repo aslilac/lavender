@@ -184,6 +184,17 @@ impl Arm7Tdmi {
         self.registers.cpsr >> 28 & 1 > 0
     }
 
+    pub fn set_nzcv(&mut self, n: bool, z: bool, c: bool, v: bool) {
+        let mut flags = 0;
+
+        if n { flags |= 0x8 }
+        if z { flags |= 0x4 }
+        if c { flags |= 0x2 }
+        if v { flags |= 0x1 }
+
+        self.registers.cpsr = (self.registers.cpsr & 0x0fffffff) | (flags << 28);
+    }
+
     pub fn set_fiq_disable(&mut self, disabled: bool) {
         if disabled {
             self.registers.cpsr |= Arm7TdmiRegisters::FIQ_DISABLE;
@@ -484,7 +495,7 @@ mod tests {
     }
 
     #[test]
-    fn condition_bits() {
+    fn get_condition_bits() {
         let mut cpu = Arm7Tdmi::init();
 
         // Should all be off by default
@@ -497,6 +508,44 @@ mod tests {
         cpu.registers.cpsr |= 0xf0000000;
 
         // Should now all be on
+        assert!(cpu.get_n());
+        assert!(cpu.get_z());
+        assert!(cpu.get_c());
+        assert!(cpu.get_v());
+    }
+
+    #[test]
+    fn set_condition_bits() {
+        let mut cpu = Arm7Tdmi::init();
+
+        // Should all be off by default
+        assert!(!cpu.get_n());
+        assert!(!cpu.get_z());
+        assert!(!cpu.get_c());
+        assert!(!cpu.get_v());
+
+        // Make sure they stay off
+        cpu.set_nzcv(false, false, false, false);
+
+        // Should still all be off
+        assert!(!cpu.get_n());
+        assert!(!cpu.get_z());
+        assert!(!cpu.get_c());
+        assert!(!cpu.get_v());
+
+        // Set all of the flag bits
+        cpu.set_nzcv(true, true, true, true);
+
+        // Should now all be on
+        assert!(cpu.get_n());
+        assert!(cpu.get_z());
+        assert!(cpu.get_c());
+        assert!(cpu.get_v());
+
+        // Set all of the flag bits
+        cpu.set_nzcv(true, true, true, true);
+
+        // Should still all be on
         assert!(cpu.get_n());
         assert!(cpu.get_z());
         assert!(cpu.get_c());
