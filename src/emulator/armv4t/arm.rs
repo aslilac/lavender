@@ -21,16 +21,17 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) {
     // The first onces we want to look at are the three bits [27:25]
     let category = instruction >> 25 & 7;
 
-    let implementation = match category {
+    match category {
         // Data processing immediate shift if opcode != 0b10xx && s == 1
         // Miscellaneous instructions (Figure A3-4)
         // Data processing register shift if opcode != 0b10xx && s == 1
         // Miscellaneous instructions (Figure A3-4)
         // Multiplies (Figure A3-3) and Extra load/stores (Figure A3-5)
         0b000 | 0b001 => {
-            let opcode = instruction >> 21 & 7;
+            let opcode = instruction >> 21 & 0xf;
             let set_flags = instruction >> 20 & 1;
-            let lower_decode_bits = instruction >> 4 & 15;
+            let lower_decode_bits = instruction >> 4 & 0xf;
+
             match (opcode, set_flags, lower_decode_bits) {
                 (_, 1, 0b1011) if category == 0 => ldrh,
                 (_, 1, 0b1101) if category == 0 => ldrsb,
@@ -123,9 +124,7 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) {
         // Theoretically, this is impossible, but we don't have a way to tell the
         // compiler that, so we have to have the case here anyway.
         _ => placeholder,
-    };
-    
-    implementation
+    }
 }
 
 /// Handles the b and bl instructions
@@ -224,7 +223,6 @@ pub fn and(emulator: &mut Emulator, instruction: u32) {
     let should_update_flags = instruction >> 20 & 1 > 0;
 
     // Get the instruction operands
-
     let (
         destination_register,
         operand_register_value,
@@ -281,20 +279,23 @@ pub fn bic(emulator: &mut Emulator, instruction: u32) {
     emulator.cpu.set_register_value(destination_register, result);
 }
 
-pub fn bx(emulator: &mut Emulator, instruction: u32) {}
+pub fn bx(_emulator: &mut Emulator, _instruction: u32) {}
 
-pub fn cdp(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn cmn(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn cmp(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn eor(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn ldc(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn ldm(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn ldr(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) {}
+// ✅: Unit tested
+// 🆚: Mostly implemented
+// 🅾️: Not implemented
+pub fn cdp(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn cmn(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn cmp(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn eor(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn ldc(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn ldm(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn ldr(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) {} // ✅
 pub fn ldrbt(_emulator: &mut Emulator, _instruction: u32) {}  // 🆚
-pub fn ldrh(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn ldrsb(_emulator: &mut Emulator, _instruction: u32) {}
-pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) {}
+pub fn ldrh(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn ldrsb(_emulator: &mut Emulator, _instruction: u32) {} // ✅
+pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) {} // ✅
 pub fn ldrt(_emulator: &mut Emulator, _instruction: u32) {}  // 🆚
 pub fn mcr(_emulator: &mut Emulator, _instruction: u32) {}
 pub fn mla(_emulator: &mut Emulator, _instruction: u32) {}
