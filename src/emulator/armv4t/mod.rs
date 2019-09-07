@@ -1,5 +1,6 @@
 pub mod arm;
 pub mod thumb;
+pub mod utils;
 
-// mod address_mode;
-// mod instructions;
+// #[cfg(test)]
+// mod tests;

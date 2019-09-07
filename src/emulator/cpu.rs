@@ -380,7 +380,7 @@ pub enum Arm7OperationModes {
 // in conjunction with the {get,set}_register_value functions to automatically
 // handle using the correct register for the execution mode.
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, Debug, IntoPrimitive, TryFromPrimitive)]
+#[derive(Copy, Clone, Debug, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u32)]
 pub enum Arm7RegisterNames {
     r0,
@@ -404,7 +404,7 @@ pub enum Arm7RegisterNames {
     spsr,
 }
 
-#[derive(Copy, Clone, Debug, IntoPrimitive, TryFromPrimitive)]
+#[derive(Copy, Clone, Debug, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u32)]
 pub enum Arm7ConditionCodes {
     EQ = 0b0000, // Equals - Z set
