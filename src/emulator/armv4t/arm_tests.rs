@@ -15,6 +15,27 @@ fn decode_add() {
 }
 
 #[test]
+fn behavior_add() {
+    let mut emulator = Emulator::dummy();
+
+    // Initialize r3 adn r4 as the accumulators, and r5 as the increment for r4
+    emulator.cpu.set_register_value(r3, 0);
+    emulator.cpu.set_register_value(r4, 0);
+    emulator.cpu.set_register_value(r5, 3);
+
+    for _ in 0..10 {
+        // add r3, r3, #1
+        process_instruction(&mut emulator, 0b1110_00_1_0100_1_0011_0011_0000_00000001);
+        // add r4, r4, r5
+        process_instruction(&mut emulator, 0b1110_00_0_0100_1_0100_0100_00000000_0101);
+    }
+
+    // Assert that the adding completed correctly
+    assert_eq!(emulator.cpu.get_register_value(r3), 10);
+    assert_eq!(emulator.cpu.get_register_value(r4), 30);
+}
+
+#[test]
 fn decode_and() {
     assert_eq!(decode_instruction(0x0_00_000_0_0) as usize, and as usize);
 }
