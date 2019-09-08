@@ -65,14 +65,12 @@ impl Emulator {
     pub fn test(&mut self) {
         // Set display mode to bitmap
         self.memory.write_half_word(0x0400_0000, 0x0403);
+        let point = |x, y: u32| 0x0600_0000 + (x + y * 240) * 2;
 
         // Write a few test pixels into vram
-        self.memory
-            .write_half_word(0x0600_0000 + (120 + 80 * 240) * 2, 0x001F);
-        self.memory
-            .write_half_word(0x0600_0000 + (136 + 80 * 240) * 2, 0x03E0);
-        self.memory
-            .write_half_word(0x0600_0000 + (120 + 96 * 240) * 2, 0x7C00);
+        self.memory.write_half_word(point(120, 80), 0x03ff);
+        self.memory.write_half_word(point(136, 80), 0x7c16);
+        self.memory.write_half_word(point(120, 96), 0x4fe3);
 
         log!("Emulator started successfully!");
     }
