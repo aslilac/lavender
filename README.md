@@ -68,6 +68,13 @@ recompile updated files and refresh your browser, simply run...
 yarn dev
 ```
 
+If you want to run it in release mode (optimized and high-performance, basically
+if you want to actually play games) then run...
+
+```Shell
+yarn release
+```
+
 You should then be able to access the emulator at `localhost:1234`
 
 ## Progress

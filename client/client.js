@@ -1,10 +1,18 @@
 // import {
 // } from 'three';
 
+const drawingModes = [
+  '[Object]\n    all 4 layers, no rotate or scale',
+  '[Object]\n    layers [0..2], layer 2 rotate and scale',
+  '[Object]\n    layers [2..3], both rotate and scale',
+  '[Bitmap]\n    full resolution, full color, unbuffered',
+  '[Bitmap]\n    full resolution, palette color, buffered',
+  '[Bitmap]\n    160x128, full color, buffered'
+];
 
 function enable_drawing( ioAddress, vramAddress ) {
   const display = document.querySelector( '#display' );
-  const output = document.querySelector( '#output' );
+  const output = document.querySelector( '#stats' );
   const box = display.getBoundingClientRect();
   
   const _2d = display.getContext( '2d' );
@@ -80,7 +88,7 @@ function enable_drawing( ioAddress, vramAddress ) {
     output.innerHTML = `Frame: ${frame++}
 Emulation time: <span style="color: var(${emulationTimeColor})">${emulationTime}ms</span>
 Frame time: <span style="color: var(${frameTimeColor})">${frameTime}ms</span>
-Display mode: ${displayMode}`;
+Display mode: ${displayMode} <${drawingModes[displayMode]}>`;
 
     requestAnimationFrame( render );
   }
@@ -88,8 +96,8 @@ Display mode: ${displayMode}`;
   // Allow spacebar to begin emulation
   window.addEventListener( 'keydown', event => {
     if ( event.keyCode === 32 ) {
-      shouldRender = true;
-      requestAnimationFrame( render );
+      shouldRender = !shouldRender;
+      if ( shouldRender ) requestAnimationFrame( render );
     }
   });
 
