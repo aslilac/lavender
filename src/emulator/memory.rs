@@ -162,9 +162,7 @@ impl Memory {
             EXT_START..=EXT_END => self.ext[i - EXT_START] = value,
             RAM_START..=RAM_END => self.ram[i - RAM_START] = value,
             IO_START..=IO_END => self.io[i - IO_START] = value,
-            PALETTE_START..=PALETTE_END => {
-                self.palette[i - PALETTE_START] = value
-            }
+            PALETTE_START..=PALETTE_END => self.palette[i - PALETTE_START] = value,
             VRAM_START..=VRAM_END => self.vram[i - VRAM_START] = value,
             OBJECT_ATTRIBUTE_START..=OBJECT_ATTRIBUTE_END => {
                 self.object[i - OBJECT_ATTRIBUTE_START] = value

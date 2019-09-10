@@ -72,7 +72,6 @@ You should then be able to access the emulator at `localhost:1234`
 
 ## Progress
 
-
 ### ARM v4T Emulation
 - [ ] 32-bit ARM instructions
   - [x] Decoding
