@@ -1,3 +1,43 @@
+pub const BIOS_SIZE: usize = 16 * 1024;
+pub const BIOS_START: usize = 0x0000_0000;
+pub const BIOS_END: usize = BIOS_START + BIOS_SIZE;
+
+pub const EXT_SIZE: usize = 256 * 1024;
+pub const EXT_START: usize = 0x0200_0000;
+pub const EXT_END: usize = EXT_START + EXT_SIZE;
+
+pub const RAM_SIZE: usize = 32 * 1024;
+pub const RAM_START: usize = 0x0300_0000;
+pub const RAM_END: usize = RAM_START + RAM_SIZE;
+
+pub const IO_SIZE: usize = 1024;
+pub const IO_START: usize = 0x0400_0000;
+pub const IO_END: usize = IO_START + IO_SIZE;
+
+pub const PALETTE_SIZE: usize = 1024;
+pub const PALETTE_START: usize = 0x0500_0000;
+pub const PALETTE_END: usize = PALETTE_START + PALETTE_SIZE;
+
+pub const VRAM_SIZE: usize = 96 * 1024;
+pub const VRAM_START: usize = 0x0600_0000;
+pub const VRAM_END: usize = VRAM_START + VRAM_SIZE;
+
+pub const OBJECT_ATTRIBUTE_SIZE: usize = 1024;
+pub const OBJECT_ATTRIBUTE_START: usize = 0x0700_0000;
+pub const OBJECT_ATTRIBUTE_END: usize = OBJECT_ATTRIBUTE_START + OBJECT_ATTRIBUTE_SIZE;
+
+pub const ROM_SIZE: usize = 32 * 1024 * 1024;
+pub const ROM_START: usize = 0x0800_0000;
+pub const ROM_END: usize = ROM_START + ROM_SIZE;
+pub const ROM_WAIT1_START: usize = 0x0a00_0000;
+pub const ROM_WAIT1_END: usize = ROM_WAIT1_START + ROM_SIZE;
+pub const ROM_WAIT2_START: usize = 0x0c00_0000;
+pub const ROM_WAIT2_END: usize = ROM_WAIT2_START + ROM_SIZE;
+
+pub const SAVE_SIZE: usize = 64 * 1024;
+pub const SAVE_START: usize = 0x0e00_0000;
+pub const SAVE_END: usize = SAVE_START + SAVE_SIZE;
+
 pub struct Memory {
     /// Stores the BIOS of the Game Boy Advance, which is home to the software
     /// interupt table and some useful methods that there are not instructions for.
@@ -26,54 +66,17 @@ pub struct Memory {
 }
 
 impl Memory {
-    pub const BIOS_START: usize = 0x0000_0000;
-    pub const BIOS_SIZE: usize = 16 * 1024;
-    pub const BIOS_END: usize = Self::BIOS_START + Self::BIOS_SIZE;
-
-    pub const EXT_START: usize = 0x0200_0000;
-    pub const EXT_SIZE: usize = 256 * 1024;
-    pub const EXT_END: usize = Self::EXT_START + Self::EXT_SIZE;
-
-    pub const RAM_START: usize = 0x0300_0000;
-    pub const RAM_SIZE: usize = 32 * 1024;
-    pub const RAM_END: usize = Self::RAM_START + Self::RAM_SIZE;
-
-    pub const IO_START: usize = 0x0400_0000;
-    pub const IO_SIZE: usize = 1024;
-    pub const IO_END: usize = Self::IO_START + Self::IO_SIZE;
-
-    pub const PALETTE_START: usize = 0x0500_0000;
-    pub const PALETTE_SIZE: usize = 1024;
-    pub const PALETTE_END: usize = Self::PALETTE_START + Self::PALETTE_SIZE;
-
-    pub const VRAM_START: usize = 0x0600_0000;
-    pub const VRAM_SIZE: usize = 96 * 1024;
-    pub const VRAM_END: usize = Self::VRAM_START + Self::VRAM_SIZE;
-
-    pub const OBJECT_ATTRIBUTE_START: usize = 0x0700_0000;
-    pub const OBJECT_ATTRIBUTE_SIZE: usize = 1024;
-    pub const OBJECT_ATTRIBUTE_END: usize =
-        Self::OBJECT_ATTRIBUTE_START + Self::OBJECT_ATTRIBUTE_SIZE;
-
-    pub const ROM_START: usize = 0x0800_0000;
-    pub const ROM_SIZE: usize = 32 * 1024 * 1024;
-    pub const ROM_END: usize = Self::ROM_START + Self::ROM_SIZE;
-
-    pub const SAVE_START: usize = 0x0e00_0000;
-    pub const SAVE_SIZE: usize = 64 * 1024;
-    pub const SAVE_END: usize = Self::SAVE_START + Self::SAVE_SIZE;
-
     pub fn init() -> Self {
         let mut memory = Self {
-            bios: vec![0; Self::BIOS_SIZE],
-            ext: vec![0; Self::EXT_SIZE],
-            ram: vec![0; Self::RAM_SIZE],
-            io: vec![0; Self::IO_SIZE],
-            palette: vec![0; Self::PALETTE_SIZE],
-            vram: vec![0; Self::VRAM_SIZE],
-            object: vec![0; Self::OBJECT_ATTRIBUTE_SIZE],
+            bios: vec![0; BIOS_SIZE],
+            ext: vec![0; EXT_SIZE],
+            ram: vec![0; RAM_SIZE],
+            io: vec![0; IO_SIZE],
+            palette: vec![0; PALETTE_SIZE],
+            vram: vec![0; VRAM_SIZE],
+            object: vec![0; OBJECT_ATTRIBUTE_SIZE],
             rom: vec![0; 1],
-            save: vec![0; Self::SAVE_SIZE],
+            save: vec![0; SAVE_SIZE],
         };
 
         // Copy the BIOS into memory
@@ -134,17 +137,19 @@ impl Memory {
         let i = address as usize;
 
         match i {
-            Self::BIOS_START..=Self::BIOS_END => self.bios[i],
-            Self::EXT_START..=Self::EXT_END => self.ext[i - Self::EXT_START],
-            Self::RAM_START..=Self::RAM_END => self.ram[i - Self::RAM_START],
-            Self::IO_START..=Self::IO_END => self.io[i - Self::IO_START],
-            Self::PALETTE_START..=Self::PALETTE_END => self.palette[i - Self::PALETTE_START],
-            Self::VRAM_START..=Self::VRAM_END => self.vram[i - Self::VRAM_START],
-            Self::OBJECT_ATTRIBUTE_START..=Self::OBJECT_ATTRIBUTE_END => {
-                self.object[i - Self::OBJECT_ATTRIBUTE_START]
+            BIOS_START..=BIOS_END => self.bios[i],
+            EXT_START..=EXT_END => self.ext[i - EXT_START],
+            RAM_START..=RAM_END => self.ram[i - RAM_START],
+            IO_START..=IO_END => self.io[i - IO_START],
+            PALETTE_START..=PALETTE_END => self.palette[i - PALETTE_START],
+            VRAM_START..=VRAM_END => self.vram[i - VRAM_START],
+            OBJECT_ATTRIBUTE_START..=OBJECT_ATTRIBUTE_END => {
+                self.object[i - OBJECT_ATTRIBUTE_START]
             }
-            Self::ROM_START..=Self::ROM_END => self.rom[i - Self::ROM_START],
-            Self::SAVE_START..=Self::SAVE_END => self.save[i - Self::SAVE_START],
+            ROM_START..=ROM_END => self.rom[i - ROM_START],
+            ROM_WAIT1_START..=ROM_WAIT1_END => self.rom[i - ROM_WAIT1_START],
+            ROM_WAIT2_START..=ROM_WAIT2_END => self.rom[i - ROM_WAIT2_START],
+            SAVE_START..=SAVE_END => self.save[i - SAVE_START],
             _ => 0,
         }
     }
@@ -153,20 +158,21 @@ impl Memory {
         let i = address as usize;
 
         match i {
-            // We probably don't want to allow people to write to the bios.
-            // Self::BIOS_START..=Self::BIOS_END => self.bios[i] = value,
-            Self::EXT_START..=Self::EXT_END => self.ext[i - Self::EXT_START] = value,
-            Self::RAM_START..=Self::RAM_END => self.ram[i - Self::RAM_START] = value,
-            Self::IO_START..=Self::IO_END => self.io[i - Self::IO_START] = value,
-            Self::PALETTE_START..=Self::PALETTE_END => {
-                self.palette[i - Self::PALETTE_START] = value
+            // Note that BIOS is intentionally missing.
+            EXT_START..=EXT_END => self.ext[i - EXT_START] = value,
+            RAM_START..=RAM_END => self.ram[i - RAM_START] = value,
+            IO_START..=IO_END => self.io[i - IO_START] = value,
+            PALETTE_START..=PALETTE_END => {
+                self.palette[i - PALETTE_START] = value
             }
-            Self::VRAM_START..=Self::VRAM_END => self.vram[i - Self::VRAM_START] = value,
-            Self::OBJECT_ATTRIBUTE_START..=Self::OBJECT_ATTRIBUTE_END => {
-                self.object[i - Self::OBJECT_ATTRIBUTE_START] = value
+            VRAM_START..=VRAM_END => self.vram[i - VRAM_START] = value,
+            OBJECT_ATTRIBUTE_START..=OBJECT_ATTRIBUTE_END => {
+                self.object[i - OBJECT_ATTRIBUTE_START] = value
             }
-            Self::ROM_START..=Self::ROM_END => self.rom[i - Self::ROM_START] = value,
-            Self::SAVE_START..=Self::SAVE_END => self.save[i - Self::SAVE_START] = value,
+            ROM_START..=ROM_END => self.rom[i - ROM_START] = value,
+            ROM_WAIT1_START..=ROM_WAIT1_END => self.rom[i - ROM_WAIT1_START] = value,
+            ROM_WAIT2_START..=ROM_WAIT2_END => self.rom[i - ROM_WAIT2_START] = value,
+            SAVE_START..=SAVE_END => self.save[i - SAVE_START] = value,
             _ => (),
         };
     }
@@ -230,7 +236,7 @@ mod tests {
         let mut memory = Memory::init();
 
         // Write into interal ram
-        let offset = Memory::RAM_START as u32;
+        let offset = RAM_START as u32;
         memory.write_word(offset, 0x01020304);
 
         // Test that it is stored correctly
@@ -245,7 +251,7 @@ mod tests {
         let mut memory = Memory::init();
 
         // Write into interal ram
-        let offset = Memory::RAM_START as u32;
+        let offset = RAM_START as u32;
         memory.write_word(offset, 0x01020304);
 
         // Test that we read it out properly
@@ -261,7 +267,7 @@ mod tests {
         let mut memory = Memory::init();
 
         // Initialize memory and set a red pixel
-        let offset = Memory::VRAM_START as u32;
+        let offset = VRAM_START as u32;
         memory.write_half_word(offset, 0x001f);
 
         // Make sure that the red pixel has the correct value
