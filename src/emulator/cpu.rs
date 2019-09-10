@@ -1,10 +1,7 @@
-#[macro_use]
-use crate::log;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::convert::TryFrom;
 
 pub struct Arm7Tdmi {
-    pub frequency: u32,
     pub halt: bool,
     pub registers: Arm7TdmiRegisters,
 }
@@ -12,28 +9,12 @@ pub struct Arm7Tdmi {
 impl Arm7Tdmi {
     pub fn init() -> Self {
         let mut cpu = Self {
-            frequency: 0,
             halt: true,
             registers: Arm7TdmiRegisters::new(),
         };
 
         cpu.reset();
         cpu
-    }
-
-    pub fn set_frequency(&mut self, frequency: u32) {
-        self.frequency = frequency;
-    }
-
-    pub fn start(&mut self) {
-        self.halt = false;
-        if self.frequency <= 0 {
-            log!("Starting processor with frequency of zero will do nothing.");
-        }
-    }
-
-    pub fn halt(&mut self) {
-        self.halt = true;
     }
 
     pub fn reset(&mut self) {
@@ -435,14 +416,6 @@ pub enum Arm7ConditionCodes {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn set_frequency() {
-        let mut cpu = Arm7Tdmi::init();
-
-        cpu.set_frequency(16780000);
-        assert_eq!(cpu.frequency, 16780000);
-    }
 
     #[test]
     fn set_operation_mode() {

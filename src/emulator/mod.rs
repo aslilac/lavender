@@ -9,14 +9,15 @@ use crate::log;
 use armv4t::{arm, thumb};
 use cpu::*;
 use memory::*;
-// use std::{
-//     time::Duration,
-//     thread::sleep
-// };
 
 pub struct Emulator {
     pub cpu: Arm7Tdmi,
     pub memory: Memory,
+    
+    /// Used to keep track of how much more the emulator should do before
+    /// updating the screen. When this reaches zero, the emulator will pause
+    /// execution until the next `requestAnimationFrame` delegation.
+    pub remaining_cycles: u32,
 }
 
 impl Emulator {
@@ -24,6 +25,7 @@ impl Emulator {
         Self {
             cpu: Arm7Tdmi::init(),
             memory: Memory::init(),
+            remaining_cycles: 0,
         }
     }
 
@@ -31,35 +33,24 @@ impl Emulator {
         Self {
             cpu: Arm7Tdmi::init(),
             memory: Memory::init_small_no_bios(),
+            remaining_cycles: 0,
         }
-    }
-
-    pub fn start(rom: &[u8]) -> Self {
-        let mut emulator = Self::new();
-        emulator.load_rom(&rom);
-        emulator.cpu.set_frequency(16_780_000); // 16.78MHz
-        emulator
     }
 
     pub fn load_rom(&mut self, rom: &[u8]) {
         self.memory.rom = rom.to_vec();
     }
 
-    pub fn step(&mut self) {
-        if self.cpu.get_thumb_bit() {
-            thumb::process_instruction(self, self.memory.read_half_word(self.cpu.registers.r15));
+    pub fn step_frame(&mut self) {
+        // 16.78MHz CPU clock speed / 60Hz display refresh rate = 279,666 CPU cycles
+        self.remaining_cycles += 279_666;
 
-            // Increment the program counter by a half word
-            self.cpu.registers.r15 += 2;
-        } else {
-            arm::process_instruction(self, self.memory.read_word(self.cpu.registers.r15));
-
-            // Increment the program counter by a word
-            self.cpu.registers.r15 += 4;
+        while self.remaining_cycles > 0 {
+            self.remaining_cycles = self.remaining_cycles.saturating_sub(100000);
+            log!("{} cycles remaining", self.remaining_cycles);
         }
 
-        // WebAssembly *hates* this, so idk how we'll handle timing.
-        // sleep(Duration::from_nanos(59)
+        log!("Did a frame!");
     }
 
     pub fn test(&mut self) {

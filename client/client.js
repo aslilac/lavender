@@ -1,7 +1,6 @@
 // import {
 // } from 'three';
 
-let frame = 0;
 
 function enable_drawing( ioAddress, vramAddress ) {
   const display = document.querySelector( '#display' );
@@ -11,20 +10,29 @@ function enable_drawing( ioAddress, vramAddress ) {
   const _2d = display.getContext( '2d' );
   const dpr = window.devicePixelRatio || 1;
 
+  let frame = 0;
+  let shouldRender = true;
+
   display.width = box.width * dpr;
   display.height = box.height * dpr;
   _2d.scale( box.width * dpr / 240, box.height * dpr / 160 );
 
-  _2d.fillStyle = '#ffffff';
+  _2d.fillStyle = '#000000';
   _2d.fillRect( 0, 0, 240, 160 );
 
   function render() {
+    if ( !shouldRender ) return;
+    console.log( "Beginning render" );
+
     const beginning = Date.now();
+
+    lavender.step_frame();
 
     const io = new Uint8Array( window.memory.buffer.slice( ioAddress, ioAddress + 1024 ) );
     const vram = new Uint8Array( window.memory.buffer.slice( vramAddress, vramAddress + 96 * 1024 ) );
 
-    const displayMode = io[0] + (io[1] << 8);
+    const displayControl = io[0] + (io[1] << 8);
+    const displayMode = displayControl & 7;
 
     // Eventually all of the computation needs to either be done in Rust or GLSL,
     // with JavaScript only serving to pass values inbetween the two of them.
@@ -32,50 +40,59 @@ function enable_drawing( ioAddress, vramAddress ) {
 
     // We currently just kind of assume that the display is in mode three. We
     // probably need to knock that off at somepoint.
-    // for ( let i = 0; i < 240 * 160; i++ ) {
-    //   // Convert the 15 bit rgb colors stored in memory to 32 bit rgba colors.
 
-    //   data[ i * 4 ] = ;
-    //   data[ i * 4 + 1 ] = ;
-    //   data[ i * 4 + 2 ] = ;
-    //   data[ i * 4 + 3 ] = 255;
-    // }
+    // I'm not a fan of any of this, but putImageData doesn't provide any scaling
+    // support and this performs...okay, now that I've added some optimizations.
+    // WebGL is definitely still the route we need to go down eventually.
+    let prevColor = null;
 
-    // Frankly, this is just....bad.  It's incredibly slow, but the built in
-    // putImageData doesn't have any scaling support. WebGL will be so much
-    // better when I get that backend working properly, but in the mean time this
-    // allows development to continue on other parts of the emulator, at least
-    // until it becomes a bottleneck (it already is, with frame times of ~24ms).
-    let prevColor = null
-    for ( let y = 0; y < 160; y++ ) {
-      let beginX = 0;
+    if ( displayMode === 3 ) {
+      for ( let y = 0; y < 160; y++ ) {
+        let beginX = 0;
 
-      for ( let x = 0; x < 240; x++ ) {
-        const i = y * 240 + x;
-        const rgb15 = vram[ i * 2 ] + (vram[ i * 2 + 1 ] << 8);
+        for ( let x = 0; x < 240; x++ ) {
+          const i = y * 240 + x;
+          const rgb15 = vram[ i * 2 ] + (vram[ i * 2 + 1 ] << 8);
 
-        if ( rgb15 !== prevColor ) {
-          // Draw the rectangle before we change colors
-          _2d.fillRect( beginX, y, x - beginX + 0.2, 1.2 );
+          if ( rgb15 !== prevColor ) {
+            // Draw the rectangle before we change colors
+            _2d.fillRect( beginX, y, x - beginX + 0.2, 1.2 );
 
-          _2d.fillStyle = 'rgba(' + (rgb15 & 0x001f) * 8
-                            + ',' + (rgb15 >> 5 & 0x001f) * 8
-                            + ',' + (rgb15 >> 10 & 0x001f) * 8
-                            + ', 1)';
-          prevColor = rgb15;
-          beginX = x;
+            _2d.fillStyle = 'rgba(' + (rgb15 & 0x001f) * 8
+                              + ',' + (rgb15 >> 5 & 0x001f) * 8
+                              + ',' + (rgb15 >> 10 & 0x001f) * 8
+                              + ', 1)';
+            prevColor = rgb15;
+            beginX = x;
+          }
         }
-      }
 
-      // Draw to the end of the line.
-      _2d.fillRect( beginX, y, 240.2 - beginX, 1.2 );
+        // Draw to the end of the line.
+        _2d.fillRect( beginX, y, 240.2 - beginX, 1.2 );
+      }
     }
 
-    output.innerHTML = `Frame: ${frame++}\nFrame time: ${Date.now()-beginning}ms\nDisplay mode: 0x${displayMode.toString(16)}`;
-    // requestAnimationFrame( render );
+    output.innerHTML = `Frame: ${frame++}\nFrame time: ${Date.now()-beginning}ms\nDisplay mode: ${displayMode}`;
+
+    requestAnimationFrame( render );
   }
 
-  render();
+  // Allow spacebar to begin emulation
+  window.addEventListener( 'keydown', event => {
+    if ( event.keyCode === 32 ) {
+      shouldRender = true;
+      requestAnimationFrame( render );
+    }
+  });
+
+  // Render the frame once, and then pause until manually resumed. The wrap is
+  // necessary so that the call is put on the event loop rather than executing
+  // immediately. If it executes immediately it will attempt to call step_frame
+  // while the mutex is still locked from enable_drawing.
+  requestAnimationFrame( () => {
+    render();
+    shouldRender = false;
+  });
 }
 
 // This is so that wasm-bindgen can import this properly
@@ -90,6 +107,7 @@ Promise.all([
 ]).then( ([ module, lavender ]) => {
     // The GBA always needs at least 8 pages for memory allocation
     window.memory = module.memory;
+    window.lavender = lavender;
 
     // Load the rom into the emulator
     fetch( '/rom_tests/bin/first.gba' )
