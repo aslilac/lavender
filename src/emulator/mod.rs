@@ -13,7 +13,7 @@ use memory::*;
 pub struct Emulator {
     pub cpu: Arm7Tdmi,
     pub memory: Memory,
-    
+
     /// Used to keep track of how much more the emulator should do before
     /// updating the screen. When this reaches zero, the emulator will pause
     /// execution until the next `requestAnimationFrame` delegation.
@@ -42,15 +42,18 @@ impl Emulator {
     }
 
     pub fn step_frame(&mut self) {
+        use Arm7RegisterNames::*;
+
         // 16.78MHz CPU clock speed / 60Hz display refresh rate = 279,666 CPU cycles
         self.remaining_cycles += 279_666;
 
         while self.remaining_cycles > 0 {
-            self.remaining_cycles = self.remaining_cycles.saturating_sub(100000);
-            log!("{} cycles remaining", self.remaining_cycles);
+            let cycles_used = arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0000_00000001);
+            self.remaining_cycles = self.remaining_cycles.saturating_sub(cycles_used);
+            // log!("{} cycles remaining", self.remaining_cycles);
         }
 
-        log!("Did a frame!");
+        // log!("Did a frame! r3 has value of {}", self.cpu.get_register_value(r3));
     }
 
     pub fn test(&mut self) {

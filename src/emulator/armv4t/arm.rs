@@ -2,12 +2,12 @@ use crate::emulator::Emulator;
 use instructions::*;
 
 /// Decodes and runs the instruction in the context of the given emulator.
-pub fn process_instruction(emulator: &mut Emulator, instruction: u32) {
-    decode_instruction(instruction)(emulator, instruction);
+pub fn process_instruction(emulator: &mut Emulator, instruction: u32) -> u32 {
+    decode_instruction(instruction)(emulator, instruction)
 }
 
 /// Decodes the instruction and returns the appropriate implementation.
-pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) {
+pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) -> u32 {
     // [27:20] and [7:4] are the CPU's decode bits
     // The first onces we want to look at are the three bits [27:25]
     let category = instruction >> 25 & 7;
@@ -139,7 +139,7 @@ pub mod instructions {
     use std::convert::TryFrom;
 
     /// Addition that includes carry from the carry bit in the CPSR register.
-    pub fn adc(emulator: &mut Emulator, instruction: u32) {
+    pub fn adc(emulator: &mut Emulator, instruction: u32) -> u32 {
         let carry_amount = if emulator.cpu.get_c() { 1 } else { 0 };
         let should_update_flags = instruction >> 20 & 1 > 0;
 
@@ -167,10 +167,12 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(destination_register, result);
+        
+        5
     }
 
     /// Addition
-    pub fn add(emulator: &mut Emulator, instruction: u32) {
+    pub fn add(emulator: &mut Emulator, instruction: u32) -> u32 {
         let should_update_flags = instruction >> 20 & 1 > 0;
 
         // Get the instruction operands
@@ -199,10 +201,12 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(destination_register, result);
+        
+        5
     }
 
     /// Logical AND
-    pub fn and(emulator: &mut Emulator, instruction: u32) {
+    pub fn and(emulator: &mut Emulator, instruction: u32) -> u32 {
         let should_update_flags = instruction >> 20 & 1 > 0;
 
         // Get the instruction operands
@@ -229,10 +233,12 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(destination_register, result);
+        
+        5
     }
 
     /// Relative code branching by up 32MB in either direction.
-    pub fn b(emulator: &mut Emulator, instruction: u32) {
+    pub fn b(emulator: &mut Emulator, instruction: u32) -> u32 {
         let pc_value = emulator.cpu.get_register_value(r15);
         let negative = instruction >> 23 & 1 > 0;
 
@@ -249,10 +255,12 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(r15, pc_value.wrapping_add(shift));
+        
+        5
     }
 
     /// Equivalent to `a AND (NOT b)`
-    pub fn bic(emulator: &mut Emulator, instruction: u32) {
+    pub fn bic(emulator: &mut Emulator, instruction: u32) -> u32 {
         let should_update_flags = instruction >> 20 & 1 > 0;
 
         // Get the instruction operands
@@ -280,11 +288,13 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(destination_register, result);
+        
+        5
     }
 
     /// Linked relative code branching by up 32MB in either direction. Sets r14
     /// with an address to return to after execution.
-    pub fn bl(emulator: &mut Emulator, instruction: u32) {
+    pub fn bl(emulator: &mut Emulator, instruction: u32) -> u32 {
         let pc_value = emulator.cpu.get_register_value(r15);
         let negative = instruction >> 23 & 1 > 0;
 
@@ -302,56 +312,58 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(r15, pc_value.wrapping_add(shift));
+        
+        5
     }
 
     /// Branches execution relative to the current program counter by up 32MB in
     /// either direction. Exchanges instruction set to Thumb at the new location.
-    pub fn bx(_emulator: &mut Emulator, _instruction: u32) {}
+    pub fn bx(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
     /// Coprocessor data processing
-    pub fn cdp(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn cmn(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn cmp(_emulator: &mut Emulator, _instruction: u32) {}
+    pub fn cdp(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn cmn(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn cmp(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
     /// Logical XOR
-    pub fn eor(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn ldc(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn ldm(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn ldr(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn ldrbt(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn ldrh(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn ldrsb(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn ldrt(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn mcr(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn mla(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn mov(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn mrc(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn mrs(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn msr(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn mul(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn mvn(_emulator: &mut Emulator, _instruction: u32) {}
+    pub fn eor(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn ldc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn ldm(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn ldr(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn ldrbt(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn ldrh(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn ldrsb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn ldrt(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn mcr(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn mla(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn mov(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn mrc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn mrs(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn msr(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn mul(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn mvn(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
     /// Logical OR (also referred to as the orr instruction)
-    pub fn or(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn rsb(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn rsc(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn sbc(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn smlal(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn smull(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn stc(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn stm(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn str(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn strb(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn strbt(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn strh(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn strt(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn sub(_emulator: &mut Emulator, _instruction: u32) {}
+    pub fn or(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn rsb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn rsc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn sbc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn smlal(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn smull(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn stc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn stm(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn str(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn strb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn strbt(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn strh(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn strt(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn sub(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
     /// Triggers an interupt vector from software. Usually used to make system
     /// calls into the BIOS.
-    pub fn swi(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn swp(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn swpb(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn teq(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn tst(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn umlal(_emulator: &mut Emulator, _instruction: u32) {}
-    pub fn umull(_emulator: &mut Emulator, _instruction: u32) {}
+    pub fn swi(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn swp(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn swpb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn teq(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn tst(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn umlal(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn umull(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
 }

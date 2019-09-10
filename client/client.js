@@ -22,11 +22,11 @@ function enable_drawing( ioAddress, vramAddress ) {
 
   function render() {
     if ( !shouldRender ) return;
-    console.log( "Beginning render" );
 
     const beginning = Date.now();
 
     lavender.step_frame();
+    const emulationTime = Date.now() - beginning;
 
     const io = new Uint8Array( window.memory.buffer.slice( ioAddress, ioAddress + 1024 ) );
     const vram = new Uint8Array( window.memory.buffer.slice( vramAddress, vramAddress + 96 * 1024 ) );
@@ -72,7 +72,15 @@ function enable_drawing( ioAddress, vramAddress ) {
       }
     }
 
-    output.innerHTML = `Frame: ${frame++}\nFrame time: ${Date.now()-beginning}ms\nDisplay mode: ${displayMode}`;
+
+    const frameTime = Date.now() - beginning;
+    const emulationTimeColor = emulationTime > 11 ? '--red' : emulationTime < 7 ? '--green' : '--yellow';
+    const frameTimeColor = frameTime > 13 ? '--red' : frameTime < 9 ? '--green' : '--yellow';
+
+    output.innerHTML = `Frame: ${frame++}
+Emulation time: <span style="color: var(${emulationTimeColor})">${emulationTime}ms</span>
+Frame time: <span style="color: var(${frameTimeColor})">${frameTime}ms</span>
+Display mode: ${displayMode}`;
 
     requestAnimationFrame( render );
   }
@@ -90,6 +98,7 @@ function enable_drawing( ioAddress, vramAddress ) {
   // immediately. If it executes immediately it will attempt to call step_frame
   // while the mutex is still locked from enable_drawing.
   requestAnimationFrame( () => {
+    console.log( "Beginning render" );
     render();
     shouldRender = false;
   });
