@@ -69,3 +69,31 @@ yarn dev
 ```
 
 You should then be able to access the emulator at `localhost:1234`
+
+## Progress
+
+
+### ARM v4T Emulation
+- [ ] 32-bit ARM instructions
+  - [x] Decoding
+  - [ ] Behavior
+- [ ] 16-bit Thumb instructions
+  - [ ] Decoding
+  - [ ] Behavior
+
+### Graphics Emulation
+- [ ] Objects
+  - [ ] Mode 0 (all 4 layers, no rotate or scale)
+  - [ ] Mode 1 (layers [0..2], layer 2 rotate and scale)
+  - [ ] Mode 2 (layers [2..3], both rotate and scale)
+- [ ] Bitmaps
+  - [x] Mode 3 (full resolution, full color, unbuffered)
+  - [ ] Mode 4 (full resolution, palette color, buffered)
+  - [ ] Mode 5 (160x128, full color, buffered)
+
+### Audio Emulation
+- [ ] Channels 1 & 2 (square wave)
+- [ ] Channel 3 (sampled)
+- [ ] Channel 4 (noise)
+- [ ] Channel A & B (direct sound)
+
