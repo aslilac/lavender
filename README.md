@@ -1,6 +1,6 @@
 # Lavender
-![package version](https://img.shields.io/badge/lavender-v0.0.0-9394e4.svg)
-![stability](https://img.shields.io/badge/stability-alpha-f2667b.svg)
+![package version](https://img.shields.io/badge/lavender-v0.0.1-9394e4.svg)
+![stability](https://img.shields.io/badge/stability-beta-6680f2.svg)
 [![Build Status](https://travis-ci.org/partheseas/lavender.svg?branch=master)](https://travis-ci.org/partheseas/lavender)
 
 A Game Boy Advance emulator written in Rust that runs in the browser.
@@ -50,14 +50,15 @@ integrates with wasm-pack to automatically compile/recompile our Rust source
 code, which enables quick iteration.
 
 **Note:** When Parcel 2 comes out with better WebAssembly support, I will likely
-switch to that.
+switch to that. I would also like to use TypeScript, but I can't get it to work
+properly with the current setup (and believe me, I have tried).
 
 To get set up for development you need to install the following tools...
 
 - [Node.js](https://nodejs.org)
 - [Yarn](https://yarnpkg.com)
 - [Rust](https://rustup.rs)
-- [wasm-pack cli](https://rustwasm.github.io/wasm-pack/installer/)
+- [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 
 Then run `yarn` and `cargo build` to install all the other dependencies.
 
@@ -75,7 +76,8 @@ if you want to actually play games) then run...
 yarn release
 ```
 
-You should then be able to access the emulator at `localhost:1234`
+You should then be able to access the emulator at `http://localhost:1234` after
+starting either script.
 
 ## Progress
 
