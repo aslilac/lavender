@@ -23,4 +23,13 @@ you will be looking at your emulator *a lot*.
 To be clear, it is harder, but you will also learn more, be challenged more, and
 enjoy the end product more as a result.
 
+## Terminology and Notation
+Through out this book, I will use the same notation as all of ARM's documentation
+when referring to bit ranges in a value. That is, in a 32 bit number, the bits go
+in order from bit 31 to bit 0.
+
+For example,
+
+> The decode bits of an instruction are defined to be bits[27:20] and bits[7:4].
+
 

@@ -18,8 +18,13 @@ let the name confuse you, this is an incredible resource.
 - [CowBite](https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm)
 - [gbadev](https://gbadev.org/docs.php)
 - [GBAGuy: GBA-ASM](https://patater.com/gbaguy/gbaasm.htm)
+- [GBATEK](https://problemkaputt.de/gbatek.htm)
 - [TONC](https://www.coranac.com/tonc/text/toc.htm)
 
 ### Implementation References
-- [mGBA](https://github.com/mgba-emu/mgba)
+- [mGBA (C)](https://github.com/mgba-emu/mgba)
   - [BIOS Implementation](https://github.com/mgba-emu/mgba/blob/master/src/gba/hle-bios.c)
+- [IodineGBA (JavaScript)](https://github.com/taisel/IodineGBA)
+- [VisualBoyAdvance-m (C++)](https://github.com/visualboyadvance-m/visualboyadvance-m/tree/master/src)
+
+and of course, [Lavender (Rust)](https://github.com/partheseas/lavender) the implementation that this book is designed to compliment.
