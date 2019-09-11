@@ -1,6 +1,6 @@
 [package]
 name = "lavender"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["McKayla Washburn"]
 description = "A Gameboy Advanced emulator written in Rust"
 edition = "2018"
@@ -10,10 +10,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 console_error_panic_hook = "0.1.6"
+lazy_static = "1.4.0"
 num_enum = "0.4.1"
 wasm-bindgen = "0.2.49"
-wee_alloc = "0.4.5"
-lazy_static = "1.4.0"
 
 [dev-dependencies]
 mdbook = "0.3.1"
