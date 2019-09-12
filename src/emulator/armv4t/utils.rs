@@ -21,7 +21,7 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
         // Get the value from the register
         let value = emulator
             .cpu
-            .get_register_value(Arm7RegisterNames::try_from(instruction & 15).unwrap());
+            .get_register_value(RegisterNames::try_from(instruction & 15).unwrap());
 
         let shift = if is_register_shift {
             // Check to make sure that extension space instructions don't end
@@ -37,7 +37,7 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
             // wouldn't matter anyway)
             0xff & emulator
                 .cpu
-                .get_register_value(Arm7RegisterNames::try_from(instruction >> 8 & 15).unwrap())
+                .get_register_value(RegisterNames::try_from(instruction >> 8 & 15).unwrap())
         } else {
             instruction >> 7 & 0x1f
         };
@@ -57,11 +57,11 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
 pub fn get_data_processing_operands(
     emulator: &mut Emulator,
     instruction: u32,
-) -> (Arm7RegisterNames, u32, u32) {
-    let destination_register = Arm7RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
+) -> (RegisterNames, u32, u32) {
+    let destination_register = RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
     let operand_register_value = emulator
         .cpu
-        .get_register_value(Arm7RegisterNames::try_from(instruction >> 16 & 0xf).unwrap());
+        .get_register_value(RegisterNames::try_from(instruction >> 16 & 0xf).unwrap());
     let shifter_operand_value = process_shifter_operand(emulator, instruction);
 
     (

@@ -1,6 +1,6 @@
 use crate::emulator::{
     armv4t::arm::{decode_instruction, instructions::*, process_instruction},
-    cpu::Arm7RegisterNames::*,
+    cpu::RegisterNames::*,
     Emulator,
 };
 
@@ -109,6 +109,19 @@ fn decode_cmp() {
 #[test]
 fn decode_eor() {
     assert_eq!(decode_instruction(0x0_02_000_0_0) as usize, eor as usize);
+}
+
+#[test]
+fn behavior_eor() {
+    let mut emulator = Emulator::dummy();
+
+    emulator.cpu.set_register_value(r4, 0xaaaaaaaa);
+    emulator.cpu.set_register_value(r5, 0xbebebebe);
+
+    // eor r4, r4, r5
+    process_instruction(&mut emulator, 0b1110_00_0_0001_1_0100_0100_00000000_0101);
+
+    assert_eq!(emulator.cpu.get_register_value(r4), 0x14141414);
 }
 
 #[test]

@@ -1,8 +1,18 @@
-use crate::emulator::Emulator;
+use crate::emulator::{
+    cpu::*,
+    Emulator,
+};
 use instructions::*;
+use std::convert::TryFrom;
 
 /// Decodes and runs the instruction in the context of the given emulator.
 pub fn process_instruction(emulator: &mut Emulator, instruction: u32) -> u32 {
+    // Check if the condition is met before executing the instruction.
+    let condition = ConditionCodes::try_from(instruction >> 28 & 15).unwrap();
+    if !emulator.cpu.check_condition(condition) {
+        return 1;
+    }
+
     decode_instruction(instruction)(emulator, instruction)
 }
 
@@ -62,35 +72,29 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) -> u32 {
         // This is stupid and backward from how the dp instructions differentiate
         // between immediates and register values.
         0b010 | 0b011 => {
-            let n = instruction >> 22 & 1;
-            let load = instruction >> 20 & 1;
-            let t = instruction >> 24 & 1 == 0 && instruction >> 21 & 1 == 1;
+            let n = instruction >> 22 & 1 > 0;
+            let load = instruction >> 20 & 1 > 0;
+            let t = instruction >> 24 & 1 == 0 && instruction >> 21 & 1 > 0;
 
             match (n, load, t) {
-                (0, 0, true) => strt,
-                (0, 0, false) => str,
-                (1, 0, true) => strbt,
-                (1, 0, false) => strb,
-                (0, 1, true) => ldrt,
-                (0, 1, false) => ldr,
-                (1, 1, true) => ldrbt,
-                (1, 1, false) => ldrb,
-                (_, _, _) => unreachable!(),
+                (false, false, true) => strt,
+                (false, false, false) => str,
+                (true, false, true) => strbt,
+                (true, false, false) => strb,
+                (false, true, true) => ldrt,
+                (false, true, false) => ldr,
+                (true, true, true) => ldrbt,
+                (true, true, false) => ldrb,
             }
         }
         // Media instructions + architecturally undefined (Figure A3-2)
         // Architecturally undefined
         // Load/store multiple
         0b100 => {
-            let n = instruction >> 22 & 1;
-            let load = instruction >> 20 & 1;
-            match (n, load) {
-                (0, 0) => stm, // mode 1?
-                (1, 0) => stm, // mode 2? plus 21 = 0
-                (0, 1) => ldm, // mode 1?
-                (1, 1) => ldm, // mode 2? plus 21 = 0 and 15 = 0
-                // (1, 1) => ldm, // mode 3? plus 15 = 1
-                (_, _) => unreachable!(),
+            let load = instruction >> 20 & 1 > 0;
+            match load {
+                false => stm,
+                true => ldm,
             }
         }
         // Branch instructions
@@ -113,15 +117,14 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) -> u32 {
         // Coprocessor register transfers
         // Software interupt
         0b111 => {
-            let coprocessor_or_swi = instruction >> 24 & 1;
-            let direction = instruction >> 20 & 1;
-            let coprocessor_mov = instruction >> 4 & 1;
+            let coprocessor_or_swi = instruction >> 24 & 1 > 0;
+            let direction = instruction >> 20 & 1 > 0;
+            let coprocessor_mov = instruction >> 4 & 1 > 0;
             match (coprocessor_or_swi, direction, coprocessor_mov) {
-                (0, _, 0) => cdp,
-                (0, 0, 1) => mcr,
-                (0, 1, 1) => mrc,
-                (1, _, _) => swi,
-                (_, _, _) => unreachable!(),
+                (false, _, false) => cdp,
+                (false, false, true) => mcr,
+                (false, true, true) => mrc,
+                (true, _, _) => swi,
             }
         }
         _ => unreachable!(),
@@ -133,7 +136,7 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) -> u32 {
 pub mod instructions {
     use crate::emulator::{
         armv4t::utils::*,
-        cpu::{Arm7RegisterNames::*, *},
+        cpu::{RegisterNames::*, *},
         Emulator,
     };
     use std::convert::TryFrom;
@@ -144,8 +147,8 @@ pub mod instructions {
         let should_update_flags = instruction >> 20 & 1 > 0;
 
         // Get the instruction operands
-        let destination_register = Arm7RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
-        let operand_register = Arm7RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
+        let destination_register = RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
+        let operand_register = RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
         let shifter_operand = process_shifter_operand(emulator, instruction);
 
         let (result, overflow) = emulator
@@ -167,7 +170,8 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(destination_register, result);
-        
+
+        // xxx: Return the actual number of cycles that the instruction should take
         5
     }
 
@@ -201,7 +205,8 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(destination_register, result);
-        
+
+        // xxx: Return the actual number of cycles that the instruction should take
         5
     }
 
@@ -233,7 +238,8 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(destination_register, result);
-        
+
+        // xxx: Return the actual number of cycles that the instruction should take
         5
     }
 
@@ -255,7 +261,8 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(r15, pc_value.wrapping_add(shift));
-        
+
+        // xxx: Return the actual number of cycles that the instruction should take
         5
     }
 
@@ -264,8 +271,8 @@ pub mod instructions {
         let should_update_flags = instruction >> 20 & 1 > 0;
 
         // Get the instruction operands
-        let destination_register = Arm7RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
-        let operand_register = Arm7RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
+        let destination_register = RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
+        let operand_register = RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
         let shifter_operand = process_shifter_operand(emulator, instruction);
 
         let result = emulator.cpu.get_register_value(operand_register) & !shifter_operand;
@@ -288,7 +295,8 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(destination_register, result);
-        
+
+        // xxx: Return the actual number of cycles that the instruction should take
         5
     }
 
@@ -312,58 +320,175 @@ pub mod instructions {
         emulator
             .cpu
             .set_register_value(r15, pc_value.wrapping_add(shift));
-        
+
+        // xxx: Return the actual number of cycles that the instruction should take
         5
     }
 
     /// Branches execution relative to the current program counter by up 32MB in
     /// either direction. Exchanges instruction set to Thumb at the new location.
-    pub fn bx(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn bx(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        0
+    }
     /// Coprocessor data processing
-    pub fn cdp(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn cmn(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn cmp(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn cdp(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        0
+    }
+    pub fn cmn(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        0
+    }
+    pub fn cmp(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        // alu_out = Rn - shifter_operand
+        // N Flag = alu_out[31]
+        // Z Flag = if alu_out == 0 then 1 else 0
+        // C Flag = NOT BorrowFrom(Rn - shifter_operand) V Flag = OverflowFrom(Rn - shifter_operand)
+
+        0
+    }
     /// Logical XOR
-    pub fn eor(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn ldc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn ldm(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn ldr(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn ldrbt(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn ldrh(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn ldrsb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn ldrt(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn mcr(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn mla(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn mov(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn mrc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn mrs(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn msr(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn mul(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn mvn(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn eor(emulator: &mut Emulator, instruction: u32) -> u32 {
+        // Rd = Rn EOR shifter_operand
+        // if S == 1 and Rd == R15 then
+        //     if CurrentModeHasSPSR() then CPSR = SPSR
+        //     else UNPREDICTABLE
+        // else if S == 1 then
+        //     N Flag = Rd[31]
+        //     Z Flag = if Rd == 0 then 1 else 0
+        //     C Flag = shifter_carry_out
+        //     V Flag = unaffected
+
+
+        let should_update_flags = instruction >> 20 & 1 > 0;
+
+        // Get the instruction operands
+        let (destination_register, operand_register_value, shifter_operand_value) =
+            get_data_processing_operands(emulator, instruction);
+        
+        let result = operand_register_value ^ shifter_operand_value;
+
+        if should_update_flags {
+            // idk man
+        }
+
+        emulator.cpu.set_register_value(destination_register, result);
+        
+        5
+    }
+    pub fn ldc(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn ldm(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn ldr(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn ldrbt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn ldrh(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn ldrsb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn ldrt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn mcr(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn mla(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn mov(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn mrc(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn mrs(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn msr(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn mul(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn mvn(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
     /// Logical OR (also referred to as the orr instruction)
-    pub fn or(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn rsb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn rsc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn sbc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn smlal(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn smull(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn stc(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn stm(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn str(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn strb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn strbt(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn strh(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn strt(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn sub(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn or(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn rsb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn rsc(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn sbc(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn smlal(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn smull(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn stc(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn stm(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn str(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn strb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn strbt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn strh(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn strt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn sub(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
     /// Triggers an interupt vector from software. Usually used to make system
     /// calls into the BIOS.
-    pub fn swi(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn swp(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn swpb(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn teq(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn tst(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn umlal(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
-    pub fn umull(_emulator: &mut Emulator, _instruction: u32) -> u32 { 0 }
+    pub fn swi(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn swp(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn swpb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn teq(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn tst(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn umlal(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
+    pub fn umull(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+        1
+    }
 }
