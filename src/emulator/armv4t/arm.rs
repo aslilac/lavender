@@ -1,7 +1,4 @@
-use crate::emulator::{
-    cpu::*,
-    Emulator,
-};
+use crate::emulator::{cpu::*, Emulator};
 use instructions::*;
 use std::convert::TryFrom;
 
@@ -357,21 +354,22 @@ pub mod instructions {
         //     C Flag = shifter_carry_out
         //     V Flag = unaffected
 
-
         let should_update_flags = instruction >> 20 & 1 > 0;
 
         // Get the instruction operands
         let (destination_register, operand_register_value, shifter_operand_value) =
             get_data_processing_operands(emulator, instruction);
-        
+
         let result = operand_register_value ^ shifter_operand_value;
 
         if should_update_flags {
             // idk man
         }
 
-        emulator.cpu.set_register_value(destination_register, result);
-        
+        emulator
+            .cpu
+            .set_register_value(destination_register, result);
+
         5
     }
     pub fn ldc(_emulator: &mut Emulator, _instruction: u32) -> u32 {

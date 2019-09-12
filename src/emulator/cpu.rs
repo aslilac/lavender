@@ -411,18 +411,13 @@ pub enum ConditionCodes {
     GT = 0b1100, // Signed greater than - Z clear, and either N set and V set, or N clear and V clear (Z == 0,N == V)
     LE = 0b1101, // Signed less than or equal - Z set, or N set and V clear, or N clear and V set (Z == 1 or N != V)
 
-    AL = 0b1110,  // Always, no conditions
+    AL = 0b1110, // Always, no conditions
     NO = 0b1111, // Undefined, unpredictable
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        ConditionCodes::*,
-        OperationModes::*,
-        RegisterNames::*,
-        *
-    };
+    use super::{ConditionCodes::*, OperationModes::*, RegisterNames::*, *};
 
     #[test]
     fn set_operation_mode() {
