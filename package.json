@@ -14,6 +14,6 @@
   "scripts": {
     "dev": "webpack-dev-server",
     "release": "webpack-dev-server --mode=production",
-    "test": "cargo fmt && cargo clippy && cargo test"
+    "test": "cargo fmt && cargo clippy && cargo test && cargo doc --no-deps"
   }
 }

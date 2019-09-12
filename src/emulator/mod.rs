@@ -3,9 +3,6 @@ pub mod cpu;
 mod io;
 pub mod memory;
 
-#[macro_use]
-use crate::log;
-
 use armv4t::{arm, thumb};
 use cpu::*;
 use memory::*;
@@ -49,10 +46,7 @@ impl Emulator {
             let cycles_used =
                 arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0000_00000001);
             self.remaining_cycles = self.remaining_cycles.saturating_sub(cycles_used);
-            // log!("{} cycles remaining", self.remaining_cycles);
         }
-
-        // log!("Did a frame! r3 has value of {}", self.cpu.get_register_value(r3));
     }
 
     pub fn test(&mut self) {
@@ -64,7 +58,5 @@ impl Emulator {
         self.memory.write_half_word(point(120, 80), 0x03ff);
         self.memory.write_half_word(point(136, 80), 0x7c16);
         self.memory.write_half_word(point(120, 96), 0x4fe3);
-
-        log!("Emulator started successfully!");
     }
 }
