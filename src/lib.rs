@@ -16,7 +16,6 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
-    fn enable_drawing(io: *mut u8, vram: *const u8);
 }
 
 #[macro_export]
@@ -29,21 +28,34 @@ lazy_static! {
 }
 
 #[wasm_bindgen]
-pub fn start_gba(rom: &[u8]) {
+pub fn start_gba(rom: &[u8]) -> Result<(), JsValue> {
     let mut gba = GBA.lock().unwrap();
 
     gba.load_rom(&rom);
     gba.test();
 
-    enable_drawing(
-        &mut gba.memory.io[0] as *mut u8,
-        &gba.memory.vram[0] as *const u8,
-    );
-    log!("Drawing enabled");
+    Ok(())
 }
 
+/// Used from JavaScript to get a pointer to the IO memory.
 #[wasm_bindgen]
-pub fn step_frame() {
+pub fn get_io_address() -> *mut u8 {
     let mut gba = GBA.lock().unwrap();
-    gba.step_frame();
+    &mut gba.memory.io[0] as *mut u8
+}
+
+/// Used from JavaScript to get a pointer to the VRAM memory.
+#[wasm_bindgen]
+pub fn get_vram_address() -> *const u8 {
+    let gba = GBA.lock().unwrap();
+    &gba.memory.vram[0] as *const u8
+}
+
+/// Used from JavaScript to step the emulator forward the given number of frames.
+#[wasm_bindgen]
+pub fn step_frames(frames: u32) {
+    let mut gba = GBA.lock().unwrap();
+    for _ in 0..frames {
+        gba.step_frame();
+    }
 }

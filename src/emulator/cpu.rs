@@ -1,10 +1,17 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::convert::TryFrom;
 
+/// The primary processor of the Game Boy Advance. This is the CPU used to run
+/// Game Boy Advance Games.
 pub struct Arm7Tdmi {
     pub halt: bool,
     pub registers: Registers,
 }
+
+/// The secondary processor of the Game Boy Advance. It is the same one used in
+/// the Game Boy and Game Boy Color, and is included for backwards compatibility.
+/// We do not yet do anything with it, but might in the future.
+pub struct LR35902;
 
 impl Arm7Tdmi {
     pub fn init() -> Self {
@@ -265,6 +272,7 @@ impl Arm7Tdmi {
     }
 }
 
+/// The 31 registers contained within the ARM7TDMI processor.
 #[derive(Default)]
 pub struct Registers {
     // General purpose registers
@@ -351,6 +359,8 @@ impl Registers {
     }
 }
 
+/// All of the operation modes that are available to the processor. Using this
+/// enum ensures that we are always in a valid operation mode.
 #[derive(Copy, Clone, Debug, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u32)]
 pub enum OperationModes {
@@ -392,6 +402,7 @@ pub enum RegisterNames {
     spsr,
 }
 
+/// All of the possible condition codes for 32-bit ARM instructions.
 #[derive(Copy, Clone, Debug, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u32)]
 pub enum ConditionCodes {

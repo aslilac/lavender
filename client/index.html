@@ -3,6 +3,8 @@
 <head>
   <title>Lavender</title>
 
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <link rel="stylesheet" type="text/css" href="https://mckay.la/oui.575da8da.css" />
 
   <style>
@@ -23,16 +25,24 @@
       border-radius: 7px;
       display: block;
       height: 92vh;
-      margin: auto;
+      max-height: calc( 92vw / 1.5 );
+      width: 92vw;
+      max-width: calc( 92vh * 1.5 );
+      margin: 4vh auto 0 auto;
+      padding: 0;
+    }
+    
+    @media screen and (max-width: calc( 92vh * 1.5 )) {
+        #display {
+          margin-top: 1.75in;
+        }
     }
   </style>
 </head>
 <body>
 
-<section>
-  <canvas id="display" width="240" height="160"></canvas>
-  <pre id="stats"></pre>
-</section>
+<canvas id="display" width="240" height="160"></canvas>
+<pre id="stats"></pre>
 
 </body>
 </html>

@@ -18,6 +18,8 @@ pub struct Emulator {
 }
 
 impl Emulator {
+    /// Creates a new instance of an emulator, with BIOS and full memory space
+    /// available.
     pub fn new() -> Self {
         Self {
             cpu: Arm7Tdmi::init(),
@@ -26,6 +28,8 @@ impl Emulator {
         }
     }
 
+    /// Used to create simplified instances for use in unit testing. They do not
+    /// contain a BIOS and have a much smaller amount of memory available.
     pub fn dummy() -> Self {
         Self {
             cpu: Arm7Tdmi::init(),
@@ -34,10 +38,13 @@ impl Emulator {
         }
     }
 
+    /// Insert a cartridge into the emulator.
     pub fn load_rom(&mut self, rom: &[u8]) {
         self.memory.rom = rom.to_vec();
     }
 
+    /// Called from JavaScript to indicate that it is ready for the emulator to
+    /// generate the next frame.
     pub fn step_frame(&mut self) {
         // 16.78MHz CPU clock speed / 60Hz display refresh rate = 279,666 CPU cycles
         self.remaining_cycles += 279_666;

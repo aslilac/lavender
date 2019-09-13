@@ -10,7 +10,10 @@ const drawingModes = [
   '[Bitmap]\n    160x128, full color, buffered'
 ];
 
-function enable_drawing( ioAddress, vramAddress ) {
+function enable_drawing( emulator, memory ) {
+  const ioAddress = emulator.get_io_address();
+  const vramAddress = emulator.get_vram_address();
+
   const display = document.querySelector( '#display' );
   const output = document.querySelector( '#stats' );
   const box = display.getBoundingClientRect();
@@ -33,21 +36,19 @@ function enable_drawing( ioAddress, vramAddress ) {
 
     const beginning = Date.now();
 
-    lavender.step_frame();
+    // For now this always 1, because my laptop screen has a 60Hz refresh rate
+    // and can run the emulation at full speed. In the future, we need to
+    // calculate this more exactly, so that if the computer is fast enough but
+    // has a display running at 30Hz, we don't run at half speed, because that
+    // would be sad.
+    emulator.step_frames(1);
     const emulationTime = Date.now() - beginning;
 
-    const io = new Uint8Array( window.memory.buffer.slice( ioAddress, ioAddress + 1024 ) );
-    const vram = new Uint8Array( window.memory.buffer.slice( vramAddress, vramAddress + 96 * 1024 ) );
+    const io = new Uint8Array( memory.buffer.slice( ioAddress, ioAddress + 1024 ) );
+    const vram = new Uint8Array( memory.buffer.slice( vramAddress, vramAddress + 96 * 1024 ) );
 
     const displayControl = io[0] + (io[1] << 8);
     const displayMode = displayControl & 7;
-
-    // Eventually all of the computation needs to either be done in Rust or GLSL,
-    // with JavaScript only serving to pass values inbetween the two of them.
-    // The end total amount of JavaScript should be essentially negligable.
-
-    // We currently just kind of assume that the display is in mode three. We
-    // probably need to knock that off at somepoint.
 
     // I'm not a fan of any of this, but putImageData doesn't provide any scaling
     // support and this performs...okay, now that I've added some optimizations.
@@ -99,6 +100,8 @@ Display mode: ${displayMode} <${drawingModes[displayMode]}>`;
       shouldRender = !shouldRender;
       if ( shouldRender ) requestAnimationFrame( render );
     }
+
+    console.log( 'Drawing enabled' );
   });
 
   // Render the frame once, and then pause until manually resumed. The wrap is
@@ -107,31 +110,26 @@ Display mode: ${displayMode} <${drawingModes[displayMode]}>`;
   // while the mutex is still locked from enable_drawing.
   requestAnimationFrame( () => {
     console.log( "Beginning render" );
+    // We don't want to start on page load, so we call render directly, and then
+    // set shouldRender to false so that it will cancel that next animation frame. 
     render();
     shouldRender = false;
   });
 }
 
-// This is so that wasm-bindgen can import this properly
-window.enable_drawing = enable_drawing;
-
 // We have to import both of these because index_bg doesn't correctly
 // allow us to pass values back and forth even though it does expose
 // the functions. Idk if it's a bug or intended, but this way works.
 Promise.all([
+  import( '../wasm' ),
   import( '../wasm/index_bg' ),
-  import( '../wasm' )
-]).then( ([ module, lavender ]) => {
-    // The GBA always needs at least 8 pages for memory allocation
-    window.memory = module.memory;
-    window.lavender = lavender;
-
-    // Load the rom into the emulator
-    fetch( '/rom_tests/bin/first.gba' )
-    // fetch( '/game/pokemon_emerald.gba' )
+]).then(([emulator, { memory }]) => {
+  // Load the rom into the emulator
+  fetch( '/rom_tests/bin/first.gba' )
+  // fetch( '/game/pokemon_emerald.gba' )
     .then( response => response.arrayBuffer() )
-      .then( buffer => lavender.start_gba( new Uint8Array( buffer ) ) );
-    
-  })
+    .then( buffer => emulator.start_gba( new Uint8Array( buffer ) ) )
+    .then( () => enable_drawing( emulator, memory ) );
+});
 
 
