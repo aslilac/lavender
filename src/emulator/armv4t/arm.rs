@@ -325,14 +325,14 @@ pub mod instructions {
     /// Branches execution relative to the current program counter by up 32MB in
     /// either direction. Exchanges instruction set to Thumb at the new location.
     pub fn bx(_emulator: &mut Emulator, _instruction: u32) -> u32 {
-        0
+        1
     }
     /// Coprocessor data processing
     pub fn cdp(_emulator: &mut Emulator, _instruction: u32) -> u32 {
-        0
+        1
     }
     pub fn cmn(_emulator: &mut Emulator, _instruction: u32) -> u32 {
-        0
+        1
     }
     pub fn cmp(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         // alu_out = Rn - shifter_operand
@@ -340,7 +340,7 @@ pub mod instructions {
         // Z Flag = if alu_out == 0 then 1 else 0
         // C Flag = NOT BorrowFrom(Rn - shifter_operand) V Flag = OverflowFrom(Rn - shifter_operand)
 
-        0
+        1
     }
     /// Logical XOR
     pub fn eor(emulator: &mut Emulator, instruction: u32) -> u32 {
