@@ -1,42 +1,42 @@
 pub const BIOS_SIZE: usize = 16 * 1024;
 pub const BIOS_START: usize = 0x0000_0000;
-pub const BIOS_END: usize = BIOS_START + BIOS_SIZE;
+pub const BIOS_END: usize = BIOS_START + BIOS_SIZE - 1;
 
 pub const EXT_SIZE: usize = 256 * 1024;
 pub const EXT_START: usize = 0x0200_0000;
-pub const EXT_END: usize = EXT_START + EXT_SIZE;
+pub const EXT_END: usize = EXT_START + EXT_SIZE - 1;
 
 pub const RAM_SIZE: usize = 32 * 1024;
 pub const RAM_START: usize = 0x0300_0000;
-pub const RAM_END: usize = RAM_START + RAM_SIZE;
+pub const RAM_END: usize = RAM_START + RAM_SIZE - 1;
 
 pub const IO_SIZE: usize = 1024;
 pub const IO_START: usize = 0x0400_0000;
-pub const IO_END: usize = IO_START + IO_SIZE;
+pub const IO_END: usize = IO_START + IO_SIZE - 1;
 
 pub const PALETTE_SIZE: usize = 1024;
 pub const PALETTE_START: usize = 0x0500_0000;
-pub const PALETTE_END: usize = PALETTE_START + PALETTE_SIZE;
+pub const PALETTE_END: usize = PALETTE_START + PALETTE_SIZE - 1;
 
 pub const VRAM_SIZE: usize = 96 * 1024;
 pub const VRAM_START: usize = 0x0600_0000;
-pub const VRAM_END: usize = VRAM_START + VRAM_SIZE;
+pub const VRAM_END: usize = VRAM_START + VRAM_SIZE - 1;
 
 pub const OBJECT_ATTRIBUTE_SIZE: usize = 1024;
 pub const OBJECT_ATTRIBUTE_START: usize = 0x0700_0000;
-pub const OBJECT_ATTRIBUTE_END: usize = OBJECT_ATTRIBUTE_START + OBJECT_ATTRIBUTE_SIZE;
+pub const OBJECT_ATTRIBUTE_END: usize = OBJECT_ATTRIBUTE_START + OBJECT_ATTRIBUTE_SIZE - 1;
 
 pub const ROM_SIZE: usize = 32 * 1024 * 1024;
 pub const ROM_START: usize = 0x0800_0000;
-pub const ROM_END: usize = ROM_START + ROM_SIZE;
+pub const ROM_END: usize = ROM_START + ROM_SIZE - 1;
 pub const ROM_WAIT1_START: usize = 0x0a00_0000;
-pub const ROM_WAIT1_END: usize = ROM_WAIT1_START + ROM_SIZE;
+pub const ROM_WAIT1_END: usize = ROM_WAIT1_START + ROM_SIZE - 1;
 pub const ROM_WAIT2_START: usize = 0x0c00_0000;
-pub const ROM_WAIT2_END: usize = ROM_WAIT2_START + ROM_SIZE;
+pub const ROM_WAIT2_END: usize = ROM_WAIT2_START + ROM_SIZE - 1;
 
 pub const SAVE_SIZE: usize = 64 * 1024;
 pub const SAVE_START: usize = 0x0e00_0000;
-pub const SAVE_END: usize = SAVE_START + SAVE_SIZE;
+pub const SAVE_END: usize = SAVE_START + SAVE_SIZE - 1;
 
 pub struct Memory {
     /// Stores the BIOS of the Game Boy Advance, which is home to the software
