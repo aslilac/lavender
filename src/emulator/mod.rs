@@ -17,15 +17,21 @@ pub struct Emulator {
     pub remaining_cycles: u32,
 }
 
-impl Emulator {
-    /// Creates a new instance of an emulator, with BIOS and full memory space
-    /// available.
-    pub fn new() -> Self {
+impl Default for Emulator {
+    fn default() -> Self {
         Self {
             cpu: Arm7Tdmi::init(),
             memory: Memory::init(),
             remaining_cycles: 0,
         }
+    }
+}
+
+impl Emulator {
+    /// Creates a new instance of an emulator, with BIOS and full memory space
+    /// available.
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Used to create simplified instances for use in unit testing. They do not
@@ -43,17 +49,21 @@ impl Emulator {
         self.memory.rom = rom.to_vec();
     }
 
-    /// Called from JavaScript to indicate that it is ready for the emulator to
-    /// generate the next frame.
+    /// Step forward by one frame (or about 280 thousand cycles)
     pub fn step_frame(&mut self) {
         // 16.78MHz CPU clock speed / 60Hz display refresh rate = 279,666 CPU cycles
         self.remaining_cycles += 279_666;
 
         while self.remaining_cycles > 0 {
-            let cycles_used =
-                arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0000_00000001);
+            let cycles_used = self.step_instruction();
             self.remaining_cycles = self.remaining_cycles.saturating_sub(cycles_used);
         }
+    }
+
+    /// Step forward by one instruction
+    pub fn step_instruction(&mut self) -> u32 {
+        self.cpu.registers.r15 += 4;
+        arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0000_00000001)
     }
 
     pub fn test(&mut self) {

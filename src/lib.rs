@@ -1,7 +1,8 @@
 //! This layer acts as a go between for the emulator itself and the browser.
 //! Because of the additional abstraction layer, it should be relatively easy to
 //! reuse the emulator module with another compatability layer for use outside
-//! of WebAssembly.
+//! of WebAssembly. All of the actual rendering and sound generation is done in
+//! JavaScript. Only the hardware itself is emulated inside of Rust.
 
 pub mod audio;
 pub mod emulator;
@@ -24,38 +25,88 @@ macro_rules! log {
 }
 
 lazy_static! {
-    static ref GBA: Mutex<Emulator> = Mutex::new(Emulator::new());
+    static ref EMULATION: Mutex<Emulator> = Mutex::new(Emulator::new());
 }
 
+/// Starts the emulation of the provided ROM.
 #[wasm_bindgen]
-pub fn start_gba(rom: &[u8]) -> Result<(), JsValue> {
-    let mut gba = GBA.lock().unwrap();
+pub fn start_emulation(rom: &[u8]) -> Result<(), JsValue> {
+    let mut emulation = EMULATION.lock().unwrap();
 
-    gba.load_rom(&rom);
-    gba.test();
+    emulation.load_rom(&rom);
+    emulation.test();
 
     Ok(())
 }
 
-/// Used from JavaScript to get a pointer to the IO memory.
+/// Returns a pointer to the beginning of the IO memory section.
 #[wasm_bindgen]
 pub fn get_io_address() -> *mut u8 {
-    let mut gba = GBA.lock().unwrap();
-    &mut gba.memory.io[0] as *mut u8
+    let mut emulation = EMULATION.lock().unwrap();
+    &mut emulation.memory.io[0] as *mut u8
 }
 
-/// Used from JavaScript to get a pointer to the VRAM memory.
+/// Returns a pointer to the beginning of the palette memory section.
+#[wasm_bindgen]
+pub fn get_palette_address() -> *const u8 {
+    let emulation = EMULATION.lock().unwrap();
+    &emulation.memory.palette[0] as *const u8
+}
+
+/// Returns a pointer to the beginning of the VRAM memory section.
 #[wasm_bindgen]
 pub fn get_vram_address() -> *const u8 {
-    let gba = GBA.lock().unwrap();
-    &gba.memory.vram[0] as *const u8
+    let emulation = EMULATION.lock().unwrap();
+    &emulation.memory.vram[0] as *const u8
 }
 
-/// Used from JavaScript to step the emulator forward the given number of frames.
+/// Returns a pointer to the beginning of the object attribute memory section.
+#[wasm_bindgen]
+pub fn get_object_address() -> *const u8 {
+    let emulation = EMULATION.lock().unwrap();
+    &emulation.memory.object[0] as *const u8
+}
+
+/// Called from JavaScript when it is time to produce the next frame.
 #[wasm_bindgen]
 pub fn step_frames(frames: u32) {
-    let mut gba = GBA.lock().unwrap();
+    let mut emulation = EMULATION.lock().unwrap();
     for _ in 0..frames {
-        gba.step_frame();
+        emulation.step_frame();
     }
+}
+
+/// Step forward by one instruction
+#[wasm_bindgen]
+pub fn step_instruction() {
+    let mut emulation = EMULATION.lock().unwrap();
+    emulation.step_instruction();
+}
+
+/// Get the values of the current register bank
+#[wasm_bindgen]
+pub fn read_registers() -> Vec<u32> {
+    use emulator::cpu::RegisterNames::*;
+
+    let mut emulation = EMULATION.lock().unwrap();
+    emulation.cpu.set_register_value(r4, 0xdeadbeef);
+
+    vec![
+        emulation.cpu.get_register_value(r0),
+        emulation.cpu.get_register_value(r1),
+        emulation.cpu.get_register_value(r2),
+        emulation.cpu.get_register_value(r3),
+        emulation.cpu.get_register_value(r4),
+        emulation.cpu.get_register_value(r5),
+        emulation.cpu.get_register_value(r6),
+        emulation.cpu.get_register_value(r7),
+        emulation.cpu.get_register_value(r8),
+        emulation.cpu.get_register_value(r9),
+        emulation.cpu.get_register_value(r10),
+        emulation.cpu.get_register_value(r11),
+        emulation.cpu.get_register_value(r12),
+        emulation.cpu.get_register_value(r13),
+        emulation.cpu.get_register_value(r14),
+        emulation.cpu.get_register_value(r15),
+    ]
 }

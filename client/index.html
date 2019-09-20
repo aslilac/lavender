@@ -10,14 +10,19 @@
   <style>
     body {
       background-color: black;
+      min-height: unset; /* Oui...sucks sometimes. */
     }
 
-    #stats {
+    #overlay {
       position: fixed;
-      left: 1em;
+      left: 0;
       top: 0;
 
       color: white;
+    }
+
+    #overlay a {
+      color: var( --light-violet );
     }
 
     #display {
@@ -28,21 +33,36 @@
       max-height: calc( 92vw / 1.5 );
       width: 92vw;
       max-width: calc( 92vh * 1.5 );
-      margin: 4vh auto 0 auto;
-      padding: 0;
+      margin: auto;
+      margin-top: 4vh;
     }
     
     @media screen and (max-width: calc( 92vh * 1.5 )) {
         #display {
-          margin-top: 1.75in;
+          padding-top: 1.75in;
         }
+    }
+
+    .register {
+      display: inline-block;
+      background-color: darkslateblue;
+      padding: 6px 8px;
+      margin: 0 7px 10px 0;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
 
 <canvas id="display" width="240" height="160"></canvas>
-<pre id="stats"></pre>
-
+<section id="overlay">
+  <pre id="status"></pre>
+  <div>
+    <a href="/target/doc/lavender/">Documentation</a>
+  </div>
+  
+  <div id="registers"></div>
+  <button id="step-instruction">Step &rarr;</button>
+</section>
 </body>
 </html>
