@@ -7,7 +7,7 @@ const drawingModes = [
   '[Bitmap]\n    160x128, full color, buffered'
 ];
 
-let controller = null;
+// let controller = null;
 
 class Controller {
   constructor(emulator, rawMemory) {
@@ -28,10 +28,10 @@ class Controller {
 
     this.context = null;
     this.frame = 0;
-    this.shouldRender = false;
+    this.shouldEmulate = false;
     this.emulationTime = 0;
     this.frameEnd = 0;
-    this.frameTime = 0;
+    this.renderTime = 0;
   }
 
   enableDrawing() {
@@ -52,21 +52,32 @@ class Controller {
     // Allow spacebar to begin emulation
     window.addEventListener('keydown', event => {
       if (event.keyCode === 32) {
-        this.shouldRender = !this.shouldRender;
-        if (this.shouldRender) {
+        this.shouldEmulate = !this.shouldEmulate;
+        if (this.shouldEmulate) {
           console.log('Drawing enabled');
-          requestAnimationFrame(() => this.render());
+          requestAnimationFrame(() => this.emulate());
         }
+      }
+
+      else if (event.keyCode === 27) {
+        const overlay = document.querySelector('#overlay');
+        overlay.style.display = overlay.style.display === 'none' ? 'unset' : 'none';
+      }
+
+      else {
+        const keycode = document.querySelector('#keycode');
+        keycode.innerHTML = event.keyCode;
       }
     });
 
     step.addEventListener('click', () => {
       this.emulator.step_instruction();
+      this.render();
+      this.updateStatus();
       this.updateRegisters();
     });
 
     this.context = _2d;
-    this.shouldRender = true;
     // Render the frame once, and then pause until manually resumed. The wrap is
     // necessary so that the call is put on the event loop rather than executing
     // immediately. If it executes immediately it will attempt to call step_frame
@@ -74,27 +85,35 @@ class Controller {
     requestAnimationFrame(() => {
       console.log( "Beginning render" )
       // We don't want to start on page load, so we call render directly, and then
-      // set shouldRender to false so that it will cancel that next animation frame. 
+      // set shouldEmulate to false so that it will cancel that next animation frame. 
       this.render();
-      this.shouldRender = false;
     });
 
     return this;
   }
 
-  render() {
-    if (!this.shouldRender) return;
+  emulate() {
+    if (!this.shouldEmulate) return;
 
-    const beginning = Date.now();
-
+    const emulationBeginning = Date.now();
     // For now this always 1, because my laptop screen has a 60Hz refresh rate
     // and can run the emulation at full speed. In the future, we need to
     // calculate this more exactly, so that if the computer is fast enough but
     // has a display running at 30Hz, we don't run at half speed, because that
     // would be sad.
     this.emulator.step_frames(1);
-    this.emulationTime = Date.now() - beginning;
+    this.emulationTime = Date.now() - emulationBeginning;
 
+    const renderBeginning = Date.now();
+    this.render();
+    this.frameEnd = Date.now();
+    this.renderTime = this.frameEnd - renderBeginning;
+    this.frame++;
+    
+    requestAnimationFrame(() => this.emulate());
+  }
+
+  render() {
     const _2d = this.context;
     const io = this.memory.io;
     const vram = this.memory.vram;
@@ -133,33 +152,33 @@ class Controller {
       }
     }
 
-    this.frameEnd = Date.now();
-    this.frameTime = this.frameEnd - beginning;
     this.updateStatus();
     this.updateRegisters();
-    requestAnimationFrame(() => this.render());
   }
 
   updateStatus() {
     const status = document.querySelector('#status');
 
     const emulationTime = this.emulationTime;
-    const frameTime = this.frameTime;
+    const renderTime = this.renderTime;
     const emulationTimeColor = emulationTime > 11 ? '--red' : emulationTime < 7 ? '--green' : '--yellow';
-    const frameTimeColor = frameTime > 13 ? '--red' : frameTime < 9 ? '--green' : '--yellow';
+    const renderTimeColor = renderTime > 5 ? '--red' : renderTime < 3 ? '--green' : '--yellow';
     const displayMode = this.memory.io[0] & 7;
 
-    status.innerHTML = `Frame: ${this.frame++}
+    status.innerHTML = `Frame: ${this.frame}
 Emulation time: <span style="color: var(${emulationTimeColor})">${emulationTime}ms</span>
-Frame time: <span style="color: var(${frameTimeColor})">${frameTime}ms</span>
+Frame time: <span style="color: var(${renderTimeColor})">${renderTime}ms</span>
 Display mode: ${displayMode} <${drawingModes[displayMode]}>`;
   }
 
   updateRegisters() {
     const registers = document.querySelector('#registers');
-    registers.innerHTML = Array.from(this.emulator.read_registers()).map(value =>
-      `<span class="register">${value.toString(16)}</span>`
-    ).join('&nbsp;');
+    registers.innerHTML = Array.from(this.emulator.read_registers()).map((value,id) =>
+      `<span class="register">${value.toString(16)}<sub class="register-label">r${id}</sub></span>`
+    ).join('') + `<span class="register">${this.emulator.read_cpsr().toString(16)}<sub class="register-label">cpsr</sub></span>`;
+
+    const nextInstruction = document.querySelector('#next-instruction');
+    nextInstruction.innerHTML = this.emulator.read_next_instruction().toString(2).padStart(32, '0');
   }
 }
 

@@ -15,18 +15,35 @@
 
     #overlay {
       position: fixed;
-      left: 0;
-      top: 0;
+      left: 4vh;
+      top: 3vh;
 
+      width: 5.8in;
+      height: 90vh;
+
+      background-color: #13232a;
+      border-radius: 14px;
       color: white;
+
+      opacity: 0.6;
+      transition: opacity 200ms;
+    }
+
+    #overlay:hover {
+      opacity: 1;
     }
 
     #overlay a {
-      color: var( --light-violet );
+      color: darkslategray;
+    }
+
+    #overlay button {
+      background-color: darkslategray;
     }
 
     #display {
-      border: solid 3px #9394e4;
+      /* border: solid 3px #9394e4; */
+      border: solid 3px lavender;
       border-radius: 7px;
       display: block;
       height: 92vh;
@@ -43,12 +60,24 @@
         }
     }
 
+    #status {
+      width: 4.85in;
+    }
+
+    .register-label {
+      float: left;
+    }
+
     .register {
       display: inline-block;
-      background-color: darkslateblue;
+      background-color: darkslategray;
       padding: 6px 8px;
       margin: 0 7px 10px 0;
       border-radius: 4px;
+      text-align: right;
+      width: 7.5em;
+      font-family: var(--monospace);
+      font-size: 0.9em;
     }
   </style>
 </head>
@@ -56,13 +85,26 @@
 
 <canvas id="display" width="240" height="160"></canvas>
 <section id="overlay">
+  <h6>Status</h6>
   <pre id="status"></pre>
-  <div>
-    <a href="/target/doc/lavender/">Documentation</a>
-  </div>
   
+  <h6>Registers</h6>
   <div id="registers"></div>
   <button id="step-instruction">Step &rarr;</button>
+
+  <h6>Memory</h6>
+  <label>Instruction prefetch</label>
+  <code id="next-instruction"></code>
+
+  <h6>IO</h6>
+  <label>Keycode</label>
+  <code id="keycode">0</code>
+
+  <h6>Links</h6>
+  <div>
+    <a href="/book/">Book</a><br />
+    <a href="/target/doc/lavender/">Documentation</a>
+  </div>
 </section>
 </body>
 </html>
