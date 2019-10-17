@@ -1,16 +1,18 @@
 # macOS
 .DS_Store
 
-# ROMs (that you legally own, and didn't just download illegally)
+# Games and testing roms
 game
 rom_tests
+
+# Technical reference documents
+reference
 
 # Dependencies
 node_modules
 
-# Builds
-# book and doc are ignored temporarily until things get figured out
-book
-doc
+# Cargo
 target
+
+# wasm-pack
 wasm
