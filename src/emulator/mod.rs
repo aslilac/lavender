@@ -1,6 +1,5 @@
 pub mod armv4t;
 pub mod cpu;
-mod io;
 pub mod memory;
 
 use armv4t::{arm, thumb};
@@ -55,17 +54,29 @@ impl Emulator {
         self.remaining_cycles += 279_666;
 
         while self.remaining_cycles > 0 {
-            let cycles_used = self.step_instruction();
-            self.remaining_cycles = self.remaining_cycles.saturating_sub(cycles_used);
+            self.step_instruction();
         }
     }
 
     /// Step forward by one instruction
-    pub fn step_instruction(&mut self) -> u32 {
-        self.cpu.registers.r15 += 4;
-        arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0000_00000001)
-    }
+    pub fn step_instruction(&mut self) {
+        if self.cpu.get_thumb_bit() {
+            self.cpu.registers.r15 += 2;
+        } else {
+            // Read the instruction and increment the PC before running the
+            // instruction so that we don't do anything weird if the instruction
+            // changes the value of r15.
+            let instruction = self.memory.read_word(self.cpu.registers.r15);
+            self.cpu.registers.r15 += 4;
 
+            let cycles_used = arm::process_instruction(self, instruction);
+            // let cycles_used = arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0000_00000001);
+            self.remaining_cycles = self.remaining_cycles.saturating_sub(cycles_used);
+        }
+    }
+}
+
+impl Emulator {
     pub fn test(&mut self) {
         // Set display mode to bitmap
         self.memory.write_half_word(0x0400_0000, 0x0403);

@@ -244,30 +244,24 @@ impl Arm7Tdmi {
         use ConditionCodes::*;
 
         match cond {
-            EQ => self.get_z(),  // Equals - Z set
-            NE => !self.get_z(), // Not equal - Z clear
-            CS => self.get_c(),  // Carry set/unsigned higher or same - C set
-            CC => !self.get_c(), // Carry clear/unsigned lower - C clear
-            MI => self.get_n(),  // Minus/negative - N set
-            PL => !self.get_n(), // Plus/positive and zero - N clear
-            VS => self.get_v(),  // Overflow set - V set
-            VC => !self.get_v(), // Overflow clear - V clear
+            EQ => self.get_z(),
+            NE => !self.get_z(),
+            CS => self.get_c(),
+            CC => !self.get_c(),
+            MI => self.get_n(),
+            PL => !self.get_n(),
+            VS => self.get_v(),
+            VC => !self.get_v(),
 
-            // Unsigned higher - C set and Z clear
             HI => self.get_c() && !self.get_z(),
-            // Unsigned lower or same - C clear or Z set
             LS => !self.get_c() || self.get_z(),
-            // Signed greater than or equal - N set and V set, or N clear and V clear (N == V)
             GE => self.get_n() == self.get_v(),
-            // Signed less than - N set and V clear, or N clear and V set (N != V)
             LT => self.get_n() != self.get_v(),
-            // Signed greater than - Z clear, and either N set and V set, or N clear and V clear (Z == 0,N == V)
             GT => !self.get_z() && (self.get_n() == self.get_v()),
-            // Signed less than or equal - Z set, or N set and V clear, or N clear and V set (Z == 1 or N != V)
             LE => self.get_z() && (self.get_n() != self.get_v()),
 
-            AL => true,                                     // Always, unconditional
-            UND => panic!("Unpredictable condition code!"), // Undefined, unpredictable
+            AL => true,
+            UND => true, // "Unpredictable behavior"
         }
     }
 }
@@ -402,28 +396,46 @@ pub enum RegisterNames {
     spsr,
 }
 
-/// All of the possible condition codes for 32-bit ARM instructions.
+/// All of the possible condition codes for 32-bit ARM instructions. All ARMv4T
+/// instructions begin with a 4 bit condition code that can control whether or
+/// not the instruction is executed.
 #[derive(Copy, Clone, Debug, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u32)]
 pub enum ConditionCodes {
-    EQ = 0b0000, // Equals - Z set
-    NE = 0b0001, // Not equal - Z clear
-    CS = 0b0010, // Carry set/unsigned higher or same - C set
-    CC = 0b0011, // Carry clear/unsigned lower - C clear
-    MI = 0b0100, // Minus/negative - N set
-    PL = 0b0101, // Plus/positive and zero - N clear
-    VS = 0b0110, // Overflow set - V set
-    VC = 0b0111, // Overflow clear - V clear
+    /// Equals - Executes if Z is set
+    EQ = 0b0000,
+    /// Not equal - Executes if Z is clear
+    NE = 0b0001,
+    /// Carry set/unsigned higher or same - Executes if C is set
+    CS = 0b0010,
+    /// Carry clear/unsigned lower - Executes if C is clear
+    CC = 0b0011,
+    /// Minus/negative - Executes if N is set
+    MI = 0b0100,
+    /// Plus/positive and zero - Executes if N is clear
+    PL = 0b0101,
+    /// Overflow set - Executes if V is set
+    VS = 0b0110,
+    /// Overflow clear - Executes if V is clear
+    VC = 0b0111,
 
-    HI = 0b1000, // Unsigned higher - C set and Z clear
-    LS = 0b1001, // Unsigned lower or same - C clear or Z set
-    GE = 0b1010, // Signed greater than or equal - N set and V set, or N clear and V clear (N == V)
-    LT = 0b1011, // Signed less than - N set and V clear, or N clear and V set (N != V)
-    GT = 0b1100, // Signed greater than - Z clear, and either N set and V set, or N clear and V clear (Z == 0,N == V)
-    LE = 0b1101, // Signed less than or equal - Z set, or N set and V clear, or N clear and V set (Z == 1 or N != V)
+    /// Unsigned higher - C set and Z clear
+    HI = 0b1000,
+    /// Unsigned lower or same - C clear or Z set
+    LS = 0b1001,
+    /// Signed greater than or equal - N set and V set, or N clear and V clear (N == V)
+    GE = 0b1010,
+    /// Signed less than - N set and V clear, or N clear and V set (N != V)
+    LT = 0b1011,
+    /// Signed greater than - Z clear, and either N set and V set, or N clear and V clear (Z == 0,N == V)
+    GT = 0b1100,
+    /// Signed less than or equal - Z set, or N set and V clear, or N clear and V set (Z == 1 or N != V)
+    LE = 0b1101,
 
-    AL = 0b1110, // Always, no conditions
-    NO = 0b1111, // Undefined, unpredictable
+    /// Always, no conditions
+    AL = 0b1110,
+    /// Undefined, unpredictable
+    NO = 0b1111,
 }
 
 #[cfg(test)]

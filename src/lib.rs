@@ -4,9 +4,8 @@
 //! of WebAssembly. All of the actual rendering and sound generation is done in
 //! JavaScript. Only the hardware itself is emulated inside of Rust.
 
-pub mod audio;
+/// The core logic of the emulator is within this module.
 pub mod emulator;
-pub mod gl;
 
 use emulator::Emulator;
 use lazy_static::lazy_static;
@@ -30,13 +29,11 @@ lazy_static! {
 
 /// Starts the emulation of the provided ROM.
 #[wasm_bindgen]
-pub fn start_emulation(rom: &[u8]) -> Result<(), JsValue> {
+pub fn start_emulation(rom: &[u8]) {
     let mut emulation = EMULATION.lock().unwrap();
 
     emulation.load_rom(&rom);
     emulation.test();
-
-    Ok(())
 }
 
 /// Returns a pointer to the beginning of the IO memory section.
@@ -88,9 +85,7 @@ pub fn step_instruction() {
 pub fn read_registers() -> Vec<u32> {
     use emulator::cpu::RegisterNames::*;
 
-    let mut emulation = EMULATION.lock().unwrap();
-    emulation.cpu.set_register_value(r4, 0xdeadbeef);
-
+    let emulation = EMULATION.lock().unwrap();
     vec![
         emulation.cpu.get_register_value(r0),
         emulation.cpu.get_register_value(r1),
@@ -109,4 +104,21 @@ pub fn read_registers() -> Vec<u32> {
         emulation.cpu.get_register_value(r14),
         emulation.cpu.get_register_value(r15),
     ]
+}
+
+/// Get the status of the cpsr register.
+#[wasm_bindgen]
+pub fn read_cpsr() -> u32 {
+    use emulator::cpu::RegisterNames::*;
+
+    let emulation = EMULATION.lock().unwrap();
+    emulation.cpu.get_register_value(cpsr)
+}
+
+/// Allows us to inspect parts of memory the way that the emulator sees them.
+// todo: Needs to be robustified for Thumb instructions.
+#[wasm_bindgen]
+pub fn read_next_instruction() -> u32 {
+    let emulation = EMULATION.lock().unwrap();
+    emulation.memory.read_word(emulation.cpu.registers.r15 + 4)
 }

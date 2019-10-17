@@ -1,2 +1,0 @@
-const REG_KEYINPUT: u32 = 0x0400_0130;
-const REG_KEYCONT: u32 = 0x0400_0132;
