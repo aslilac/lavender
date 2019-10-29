@@ -1,3 +1,8 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+const color = (actual, yellow, red) => actual > red ? '--red' : actual < yellow ? '--green' : '--yellow';
+
 const drawingModes = [
   '[Object]\n    all 4 layers, no rotate or scale',
   '[Object]\n    layers [0..2], layer 2 rotate and scale',
@@ -6,8 +11,6 @@ const drawingModes = [
   '[Bitmap]\n    full resolution, palette color, buffered',
   '[Bitmap]\n    160x128, full color, buffered'
 ];
-
-// let controller = null;
 
 class Controller {
   constructor(emulator, rawMemory) {
@@ -70,20 +73,14 @@ class Controller {
       }
     });
 
-    step.addEventListener('click', () => {
-      this.emulator.step_instruction();
-      this.render();
-      this.updateStatus();
-      this.updateRegisters();
-    });
-
     this.context = _2d;
+
     // Render the frame once, and then pause until manually resumed. The wrap is
     // necessary so that the call is put on the event loop rather than executing
     // immediately. If it executes immediately it will attempt to call step_frame
     // while the mutex is still locked from enable_drawing.
     requestAnimationFrame(() => {
-      console.log( "Beginning render" )
+      console.log('Beginning render');
       // We don't want to start on page load, so we call render directly, and then
       // set shouldEmulate to false so that it will cancel that next animation frame. 
       this.render();
@@ -138,6 +135,7 @@ class Controller {
             // Draw the rectangle before we change colors
             _2d.fillRect(beginX, y, x - beginX + 0.2, 1.2);
 
+            // Translate from 15-bit color to 32-bit color
             _2d.fillStyle = 'rgba(' + (rgb15 & 0x001f) * 8
                               + ',' + (rgb15 >> 5 & 0x001f) * 8
                               + ',' + (rgb15 >> 10 & 0x001f) * 8
@@ -152,33 +150,57 @@ class Controller {
       }
     }
 
-    this.updateStatus();
-    this.updateRegisters();
+    this.updateOverlay();
   }
 
-  updateStatus() {
-    const status = document.querySelector('#status');
-
+  updateOverlay() {
     const emulationTime = this.emulationTime;
     const renderTime = this.renderTime;
-    const emulationTimeColor = emulationTime > 11 ? '--red' : emulationTime < 7 ? '--green' : '--yellow';
-    const renderTimeColor = renderTime > 5 ? '--red' : renderTime < 3 ? '--green' : '--yellow';
+    const emulationTimeColor = `var(${color(emulationTime, 7, 11)})`;
+    const renderTimeColor = `var(${color(renderTime, 3, 5)})`;
     const displayMode = this.memory.io[0] & 7;
 
-    status.innerHTML = `Frame: ${this.frame}
-Emulation time: <span style="color: var(${emulationTimeColor})">${emulationTime}ms</span>
-Frame time: <span style="color: var(${renderTimeColor})">${renderTime}ms</span>
-Display mode: ${displayMode} <${drawingModes[displayMode]}>`;
-  }
+    ReactDOM.render(
+      <>
+        <h6>Status</h6>
+        <pre id="status">
+          Frame: {this.frame}<br />
+          Emulation time: <span style={{color: emulationTimeColor}}>{emulationTime}ms</span><br />
+          Frame time: <span style={{color: renderTimeColor}}>{renderTime}ms</span><br />
+          Display mode: {displayMode} &lt;{drawingModes[displayMode]}&gt;<br />
+        </pre>
+        <button id="step-instruction" onClick={() => {
+          this.emulator.step_instruction();
+          this.render();
+          this.updateOverlay();
+        }}>Step &rarr;</button>
 
-  updateRegisters() {
-    const registers = document.querySelector('#registers');
-    registers.innerHTML = Array.from(this.emulator.read_registers()).map((value,id) =>
-      `<span class="register">${value.toString(16)}<sub class="register-label">r${id}</sub></span>`
-    ).join('') + `<span class="register">${this.emulator.read_cpsr().toString(16)}<sub class="register-label">cpsr</sub></span>`;
+        <h6>Registers</h6>
+        <div id="registers">
+          {
+            Array.from(this.emulator.read_registers()).map((value,id) =>
+              <span key={id} className="register">{value.toString(16)}<sub className="register-label">r{id}</sub></span>
+            )
+          }
+          <span className="register">{this.emulator.read_cpsr().toString(16)}<sub className="register-label">cpsr</sub></span>
+        </div>
 
-    const nextInstruction = document.querySelector('#next-instruction');
-    nextInstruction.innerHTML = this.emulator.read_next_instruction().toString(2).padStart(32, '0');
+        <h6>Memory</h6>
+        <label>Instruction prefetch</label>
+        <code id="next-instruction">{this.emulator.read_next_instruction().toString(2).padStart(32, '0')}</code>
+        
+        <h6>IO</h6>
+        <label>Keycode</label>
+        <code id="keycode">0</code>
+
+        <h6>Links</h6>
+        <div>
+          <a href="/target/book/">Book</a><br />
+          <a href="/target/doc/lavender/">Documentation</a>
+        </div>
+      </>,
+      document.querySelector('#overlay')
+    );
   }
 }
 
@@ -195,7 +217,7 @@ Promise.all([
     .then(response => response.arrayBuffer())
     .then(buffer => {
       emulator.start_emulation(new Uint8Array(buffer));
-      controller = new Controller(emulator, memory).enableDrawing();
+      new Controller(emulator, memory).enableDrawing();
     });
 });
 

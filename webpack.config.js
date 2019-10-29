@@ -18,6 +18,23 @@ module.exports = {
       outDir: 'wasm'
     })
   ],
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-react']
+          }
+        }
+      }
+    ],
+  },
+  performance: {
+    hints: false
+  },
   devServer: {
     compress: true,
     host: '::',
