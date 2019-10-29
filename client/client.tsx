@@ -1,7 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-const color = (actual, yellow, red) => actual > red ? '--red' : actual < yellow ? '--green' : '--yellow';
+interface Memory {
+  io: Uint8Array,
+  palette: Uint8Array,
+  vram: Uint8Array,
+  object: Uint8Array,
+}
+
+const color = (actual: number, yellow: number, red: number): string =>
+  actual > red
+    ? '--red'
+    : actual < yellow
+      ? '--green'
+      : '--yellow';
 
 const drawingModes = [
   '[Object]\n    all 4 layers, no rotate or scale',
@@ -13,7 +25,18 @@ const drawingModes = [
 ];
 
 class Controller {
-  constructor(emulator, rawMemory) {
+  emulator: any;
+  rawMemory: WebAssembly.Memory;
+  memory: Memory;
+
+  context: CanvasRenderingContext2D;
+  frame: number;
+  shouldEmulate: boolean;
+  emulationTime: number;
+  frameEnd: number;
+  renderTime: number;
+
+  constructor(emulator, rawMemory: WebAssembly.Memory) {
     this.emulator = emulator;
     this.rawMemory = rawMemory;
 
@@ -38,11 +61,10 @@ class Controller {
   }
 
   enableDrawing() {
-    const display = document.querySelector('#display');
-    const step = document.querySelector('#step-instruction');
+    const display: HTMLCanvasElement = document.querySelector('#display');
     const box = display.getBoundingClientRect();
     
-    const _2d = display.getContext('2d');
+    const _2d = this.context = display.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
   
     display.width = box.width * dpr;
@@ -62,29 +84,22 @@ class Controller {
         }
       }
 
-      else if (event.keyCode === 27) {
-        const overlay = document.querySelector('#overlay');
+      else if (event.keyCode === 192) {
+        const overlay: HTMLElement = document.querySelector('#overlay');
         overlay.style.display = overlay.style.display === 'none' ? 'unset' : 'none';
       }
 
       else {
         const keycode = document.querySelector('#keycode');
-        keycode.innerHTML = event.keyCode;
+        keycode.innerHTML = event.keyCode.toString();
       }
     });
-
-    this.context = _2d;
 
     // Render the frame once, and then pause until manually resumed. The wrap is
     // necessary so that the call is put on the event loop rather than executing
     // immediately. If it executes immediately it will attempt to call step_frame
     // while the mutex is still locked from enable_drawing.
-    requestAnimationFrame(() => {
-      console.log('Beginning render');
-      // We don't want to start on page load, so we call render directly, and then
-      // set shouldEmulate to false so that it will cancel that next animation frame. 
-      this.render();
-    });
+    requestAnimationFrame(() => this.render());
 
     return this;
   }
@@ -178,20 +193,24 @@ class Controller {
         <h6>Registers</h6>
         <div id="registers">
           {
-            Array.from(this.emulator.read_registers()).map((value,id) =>
-              <span key={id} className="register">{value.toString(16)}<sub className="register-label">r{id}</sub></span>
+            Array.from(this.emulator.read_registers()).map((value: number, id) =>
+              <span key={id} className="internal register">{value.toString(16).padStart(8, '0')}
+                <sub className="register-label">r{id}</sub></span>
             )
           }
-          <span className="register">{this.emulator.read_cpsr().toString(16)}<sub className="register-label">cpsr</sub></span>
+          <span className="internal register">{this.emulator.read_cpsr().toString(16).padStart(8, '0')}
+            <sub className="register-label">cpsr</sub></span>
         </div>
 
         <h6>Memory</h6>
-        <label>Instruction prefetch</label>
-        <code id="next-instruction">{this.emulator.read_next_instruction().toString(2).padStart(32, '0')}</code>
+        <label>Instruction prefetch</label><br />
+        <code id="next-instruction" className="internal">{
+          this.emulator.read_next_instruction().toString(2).padStart(32, '0')
+        }</code>
         
         <h6>IO</h6>
-        <label>Keycode</label>
-        <code id="keycode">0</code>
+        <label>Keycode</label><br />
+        <code id="keycode" class="internal">...</code>
 
         <h6>Links</h6>
         <div>
