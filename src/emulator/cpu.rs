@@ -261,7 +261,7 @@ impl Arm7Tdmi {
             LE => self.get_z() && (self.get_n() != self.get_v()),
 
             AL => true,
-            UND => true, // "Unpredictable behavior"
+            NO => true, // "Unpredictable behavior"
         }
     }
 }
