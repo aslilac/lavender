@@ -1,16 +1,20 @@
 {
   "name": "lavender",
+  "version": "0.0.1",
+  "author": "McKayla Washburn",
+  "description": "A Gameboy Advanced emulator written in Rust",
   "license": "MIT",
   "dependencies": {
     "react": "^16.11.0",
-    "react-dom": "^16.11.0",
-    "three": "^0.107.0"
+    "react-dom": "^16.11.0"
   },
   "devDependencies": {
     "@babel/core": "^7.6.4",
     "@babel/preset-env": "^7.6.3",
     "@babel/preset-react": "^7.6.3",
     "@babel/preset-typescript": "^7.6.0",
+    "@types/react": "^16.9.11",
+    "@types/react-dom": "^16.9.3",
     "@wasm-tool/wasm-pack-plugin": "^1.0.0",
     "babel-loader": "^8.0.6",
     "html-webpack-plugin": "^3.2.0",

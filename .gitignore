@@ -11,8 +11,6 @@ reference
 # Dependencies
 node_modules
 
-# Cargo
+# Ignore all of our various build output
+# (Cargo, wasm-pack, mdbook)
 target
-
-# wasm-pack
-wasm

@@ -45,25 +45,18 @@ unsanitized macros. No other gross C things.
 One word is not a description.
 
 ## Usage
-This project uses Webpack as its base. It bundles the JavaScript code and
-integrates with wasm-pack to automatically compile/recompile our Rust source
-code, which enables quick iteration.
-
-**Note:** When Parcel 2 comes out with better WebAssembly support, I will likely
-switch to that. I would also like to use TypeScript, but I can't get it to work
-properly with the current setup (and believe me, I have tried).
-
-To get set up for development you need to install the following tools...
+To get set up for development you need to install all of the following tools...
 
 - [Node.js](https://nodejs.org)
 - [Yarn](https://yarnpkg.com)
 - [Rust](https://rustup.rs)
 - [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 
-Then run `yarn` and `cargo build` to install all the other dependencies.
+Then run `yarn` and `cargo build` to install all the other dependencies from
+npm and Cargo.
 
 Once all of that is done, to start a development server that will automatically
-recompile updated files and refresh your browser, simply run...
+recompile and refresh your browser when files are updated, simply run...
 
 ```Shell
 yarn dev
@@ -84,9 +77,11 @@ starting either script.
 ### ARM v4T Emulation
 - [ ] 32-bit ARM instructions
   - [x] Decoding
+  - [ ] Disassembly
   - [ ] Behavior
 - [ ] 16-bit Thumb instructions
   - [ ] Decoding
+  - [ ] Disassembly
   - [ ] Behavior
 
 ### Graphics Emulation
@@ -95,8 +90,8 @@ starting either script.
   - [ ] Mode 1 (layers [0..2], layer 2 rotate and scale)
   - [ ] Mode 2 (layers [2..3], both rotate and scale)
 - [ ] Bitmaps
-  - [x] Mode 3 (full resolution, full color, unbuffered)
-  - [ ] Mode 4 (full resolution, palette color, buffered)
+  - [x] Mode 3 (240x160, full color, unbuffered)
+  - [ ] Mode 4 (240x160, palette color, buffered)
   - [ ] Mode 5 (160x128, full color, buffered)
 
 ### Audio Emulation
@@ -105,3 +100,6 @@ starting either script.
 - [ ] Channel 4 (noise)
 - [ ] Channel A & B (direct sound)
 
+### Miscellaneous
+- [ ] DMA
+- [ ] WebGL

@@ -3,6 +3,7 @@ name = "lavender"
 version = "0.0.1"
 authors = ["McKayla Washburn"]
 description = "A Gameboy Advanced emulator written in Rust"
+license = "MIT"
 edition = "2018"
 
 [lib]

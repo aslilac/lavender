@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import Overlay from './overlay';
+
 interface Memory {
   io: Uint8Array,
   palette: Uint8Array,
@@ -8,23 +10,7 @@ interface Memory {
   object: Uint8Array,
 }
 
-const color = (actual: number, yellow: number, red: number): string =>
-  actual > red
-    ? '--red'
-    : actual < yellow
-      ? '--green'
-      : '--yellow';
-
-const drawingModes = [
-  '[Object]\n    all 4 layers, no rotate or scale',
-  '[Object]\n    layers [0..2], layer 2 rotate and scale',
-  '[Object]\n    layers [2..3], both rotate and scale',
-  '[Bitmap]\n    full resolution, full color, unbuffered',
-  '[Bitmap]\n    full resolution, palette color, buffered',
-  '[Bitmap]\n    160x128, full color, buffered'
-];
-
-class Controller {
+export class Controller {
   emulator: any;
   rawMemory: WebAssembly.Memory;
   memory: Memory;
@@ -61,7 +47,10 @@ class Controller {
   }
 
   enableDrawing() {
-    const display: HTMLCanvasElement = document.querySelector('#display');
+    const overlay = document.querySelector<HTMLElement>('#overlay');
+    if (true) overlay.style.display = 'none';
+
+    const display = document.querySelector<HTMLCanvasElement>('#display');
     const box = display.getBoundingClientRect();
     
     const _2d = this.context = display.getContext('2d');
@@ -76,7 +65,7 @@ class Controller {
   
     // Allow spacebar to begin emulation
     window.addEventListener('keydown', event => {
-      if (event.keyCode === 32) {
+      if (event.code === 'Space') {
         this.shouldEmulate = !this.shouldEmulate;
         if (this.shouldEmulate) {
           console.log('Drawing enabled');
@@ -84,14 +73,8 @@ class Controller {
         }
       }
 
-      else if (event.keyCode === 192) {
-        const overlay: HTMLElement = document.querySelector('#overlay');
+      else if (event.code === 'Backquote') {
         overlay.style.display = overlay.style.display === 'none' ? 'unset' : 'none';
-      }
-
-      else {
-        const keycode = document.querySelector('#keycode');
-        keycode.innerHTML = event.keyCode.toString();
       }
     });
 
@@ -169,55 +152,11 @@ class Controller {
   }
 
   updateOverlay() {
-    const emulationTime = this.emulationTime;
-    const renderTime = this.renderTime;
-    const emulationTimeColor = `var(${color(emulationTime, 7, 11)})`;
-    const renderTimeColor = `var(${color(renderTime, 3, 5)})`;
-    const displayMode = this.memory.io[0] & 7;
-
     ReactDOM.render(
-      <>
-        <h6>Status</h6>
-        <pre id="status">
-          Frame: {this.frame}<br />
-          Emulation time: <span style={{color: emulationTimeColor}}>{emulationTime}ms</span><br />
-          Frame time: <span style={{color: renderTimeColor}}>{renderTime}ms</span><br />
-          Display mode: {displayMode} &lt;{drawingModes[displayMode]}&gt;<br />
-        </pre>
-        <button id="step-instruction" onClick={() => {
-          this.emulator.step_instruction();
-          this.render();
-          this.updateOverlay();
-        }}>Step &rarr;</button>
-
-        <h6>Registers</h6>
-        <div id="registers">
-          {
-            Array.from(this.emulator.read_registers()).map((value: number, id) =>
-              <span key={id} className="internal register">{value.toString(16).padStart(8, '0')}
-                <sub className="register-label">r{id}</sub></span>
-            )
-          }
-          <span className="internal register">{this.emulator.read_cpsr().toString(16).padStart(8, '0')}
-            <sub className="register-label">cpsr</sub></span>
-        </div>
-
-        <h6>Memory</h6>
-        <label>Instruction prefetch</label><br />
-        <code id="next-instruction" className="internal">{
-          this.emulator.read_next_instruction().toString(2).padStart(32, '0')
-        }</code>
-        
-        <h6>IO</h6>
-        <label>Keycode</label><br />
-        <code id="keycode" class="internal">...</code>
-
-        <h6>Links</h6>
-        <div>
-          <a href="/target/book/">Book</a><br />
-          <a href="/target/doc/lavender/">Documentation</a>
-        </div>
-      </>,
+      <Overlay
+        controller={this}
+        emulator={this.emulator}
+      />,
       document.querySelector('#overlay')
     );
   }
@@ -227,8 +166,8 @@ class Controller {
 // allow us to pass values bac and forth even though it does expose
 // the functions. Idk if it's a bug or intended, but this way works.
 Promise.all([
-  import('../wasm'),
-  import('../wasm/index_bg'),
+  import('../target/wasm-pack'),
+  import('../target/wasm-pack/index_bg'),
 ]).then(([emulator, { memory }]) => {
   // Load the rom into the emulator
   fetch('/rom_tests/bin/first.gba')
