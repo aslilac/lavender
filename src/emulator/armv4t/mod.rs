@@ -8,4 +8,5 @@ pub mod utils;
 
 #[cfg(test)]
 mod arm_tests;
+#[cfg(test)]
 mod thumb_tests;
