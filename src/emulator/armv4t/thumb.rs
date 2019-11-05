@@ -1,6 +1,8 @@
 use crate::emulator::Emulator;
 use instructions::*;
 
+/// Decodes and runs the instruction using the given emulator, and returns the
+/// number of cycles used.
 pub fn process_instruction(emulator: &mut Emulator, instruction: u16) -> u32 {
     decode_instruction(instruction)(emulator, instruction)
 }
@@ -69,6 +71,7 @@ pub fn placeholder(_emulator: &mut Emulator, _instruction: u16) -> u32 {
 }
 
 pub mod instructions {
+    use super::super::arm::instructions::*;
     use crate::emulator::Emulator;
 
     pub fn adc(_emulator: &mut Emulator, _instruction: u16) -> u32 {

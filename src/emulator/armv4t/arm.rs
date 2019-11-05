@@ -2,7 +2,8 @@ use crate::emulator::{cpu::*, Emulator};
 use instructions::*;
 use std::convert::TryFrom;
 
-/// Decodes and runs the instruction in the context of the given emulator.
+/// Decodes and runs the instruction using the given emulator, and returns the
+/// number of cycles used.
 pub fn process_instruction(emulator: &mut Emulator, instruction: u32) -> u32 {
     // Check if the condition is met before executing the instruction.
     let condition = ConditionCodes::try_from(instruction >> 28 & 15).unwrap();
