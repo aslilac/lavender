@@ -48,7 +48,10 @@ export class Controller {
 
   enableDrawing() {
     const overlay = document.querySelector<HTMLElement>('#overlay');
-    if (true) overlay.style.display = 'none';
+    // Eventually I'd like this to be tied to the webpack mode, but I haven't
+    // figured out how to do that yet.
+    if (false) overlay.style.display = 'none';
+
 
     const display = document.querySelector<HTMLCanvasElement>('#display');
     const box = display.getBoundingClientRect();
