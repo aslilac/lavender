@@ -264,7 +264,7 @@ pub mod instructions {
         5
     }
 
-    /// Equivalent to `a AND (NOT b)`
+    /// Bit clear - Equivalent to `a AND (NOT b)`
     pub fn bic(emulator: &mut Emulator, instruction: u32) -> u32 {
         let should_update_flags = instruction >> 20 & 1 > 0;
 
@@ -332,9 +332,13 @@ pub mod instructions {
     pub fn cdp(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }
+
+    /// Compare negative
     pub fn cmn(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }
+
+    /// Compare
     pub fn cmp(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         // alu_out = Rn - shifter_operand
         // N Flag = alu_out[31]
@@ -343,6 +347,7 @@ pub mod instructions {
 
         1
     }
+
     /// Logical XOR
     pub fn eor(emulator: &mut Emulator, instruction: u32) -> u32 {
         // Rd = Rn EOR shifter_operand
@@ -373,15 +378,43 @@ pub mod instructions {
 
         5
     }
+
+    /// Load coprocessor - Loads memory into a coprocessor
     pub fn ldc(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }
+
+    /// Load multiple
     pub fn ldm(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }
-    pub fn ldr(_emulator: &mut Emulator, _instruction: u32) -> u32 {
-        1
+
+    /// Load register
+    pub fn ldr(emulator: &mut Emulator, instruction: u32) -> u32 {
+        /*
+        MemoryAccess(B-bit, E-bit)
+        if ConditionPassed(cond) then
+            if (CP15_reg1_Ubit == 0) then
+                data = Memory[address,4] Rotate_Right (8 * address[1:0])
+            else /* CP15_reg_Ubit == 1 */ data = Memory[address,4]
+        if (Rd is R15) then
+        if (ARMv5 or above) then
+        PC = data AND 0xFFFFFFFE
+        T Bit = data[0] else
+        PC = data AND 0xFFFFFFFC Rd = data
+        */
+
+        let operand_register = RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
+        let destination_register = RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
+        let addressing_mode = process_addressing_mode(emulator, instruction);
+
+        let value = emulator.memory.read_word(addressing_mode);
+
+        emulator.cpu.set_register_value(destination_register, value);
+
+        5
     }
+
     pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }

@@ -102,7 +102,7 @@ impl Memory {
     }
 
     pub fn read_word(&self, address: u32) -> u32 {
-        assert_eq!(address % 4, 0);
+        // assert_eq!(address % 4, 0);
 
         let mut accumulator = u32::from(self.read_byte(address));
         for each in 1..4 {

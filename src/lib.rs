@@ -109,7 +109,7 @@ pub fn read_registers() -> Vec<u32> {
 /// Get the status of the cpsr register.
 #[wasm_bindgen]
 pub fn read_cpsr() -> u32 {
-    use emulator::cpu::RegisterNames::*;
+    use emulator::cpu::RegisterNames::cpsr;
 
     let emulation = EMULATION.lock().unwrap();
     emulation.cpu.get_register_value(cpsr)
@@ -120,5 +120,5 @@ pub fn read_cpsr() -> u32 {
 #[wasm_bindgen]
 pub fn read_next_instruction() -> u32 {
     let emulation = EMULATION.lock().unwrap();
-    emulation.memory.read_word(emulation.cpu.registers.r15 + 4)
+    emulation.memory.read_word(emulation.cpu.registers.r15)
 }

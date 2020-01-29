@@ -54,6 +54,10 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
     }
 }
 
+pub fn process_addressing_mode(emulator: &mut Emulator, instruction: u32) -> u32 {
+    0x0800_0000
+}
+
 pub fn get_data_processing_operands(
     emulator: &mut Emulator,
     instruction: u32,

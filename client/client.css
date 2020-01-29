@@ -37,7 +37,6 @@ body {
 }
 
 #display {
-  /* border: solid 3px #9394e4; */
   border: solid 3px lavender;
   border-radius: 7px;
   display: block;
@@ -49,7 +48,7 @@ body {
   margin-top: 4vh;
 }
 
-@media screen and (max-width: calc( 92vh * 1.5 )) {
+@media screen and (max-width: calc(92vh * 1.5)) {
     #display {
       padding-top: 1.75in;
     }
