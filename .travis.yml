@@ -4,11 +4,10 @@ rust:
   - beta
   - nightly
 cache: cargo
-matrix:
-  allow_failures:
-    - rust: nightly
 
 jobs:
+  allow_failures:
+    - rust: nightly
   include:
     - 
     - language: node_js
