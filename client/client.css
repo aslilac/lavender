@@ -1,78 +1,78 @@
 body {
-  background-color: black;
-  min-height: unset; /* Oui...sucks sometimes. */
+	background-color: black;
+	min-height: unset; /* Oui...sucks sometimes. */
 }
 
 #overlay {
-  position: fixed;
-  left: 4vh;
-  top: 3vh;
+	position: fixed;
+	left: 4vh;
+	top: 3vh;
 
-  width: 5.8in;
-  height: 2.1in;
+	width: 5.8in;
+	height: 2.1in;
 
-  background-color: #13232a;
-  border-radius: 14px;
-  color: white;
+	background-color: #13232a;
+	border-radius: 14px;
+	color: white;
 
-  opacity: 0.6;
-  transition: opacity, height 200ms;
+	opacity: 0.6;
+	transition: opacity, height 200ms;
 
-  overflow: hidden;
+	overflow: hidden;
 }
 
 #overlay:hover {
-  height: 90vh;
-  opacity: 1;
-  overflow: scroll;
+	height: 90vh;
+	opacity: 1;
+	overflow: scroll;
 }
 
 #overlay a {
-  /* color: darkslategray; */
-  color: #2c6253;
+	/* color: darkslategray; */
+	color: #2c6253;
 }
 
 #overlay button {
-  background-color: darkslategray;
+	background-color: darkslategray;
 }
 
 #display {
-  border: solid 3px lavender;
-  border-radius: 7px;
-  display: block;
-  height: 92vh;
-  max-height: calc( 92vw / 1.5 );
-  width: 92vw;
-  max-width: calc( 92vh * 1.5 );
-  margin: auto;
-  margin-top: 4vh;
+	border: solid 3px lavender;
+	border-radius: 7px;
+	display: block;
+	height: 92vh;
+	max-height: calc(92vw / 1.5);
+	width: 92vw;
+	max-width: calc(92vh * 1.5);
+	margin: auto;
+	margin-top: 4vh;
 }
 
 @media screen and (max-width: calc(92vh * 1.5)) {
-    #display {
-      padding-top: 1.75in;
-    }
+	#display {
+		padding-top: 1.75in;
+	}
 }
 
 #status {
-  width: 4.85in;
+	width: 4.85in;
 }
 
 .register-label {
-  float: left;
+	float: left;
 }
 
 .internal {
-  display: inline-block;
-  background-color: darkslategray;
-  padding: 6px 8px;
-  margin: 0 7px 10px 0;
-  border-radius: 4px;
-  text-align: right;
-  font-family: var(--monospace);
-  font-size: 0.9em;
+	display: inline-block;
+	background-color: darkslategray;
+	padding: 6px 8px;
+	margin: 0 7px 10px 0;
+	border-radius: 4px;
+	text-align: right;
+	font-family: var(--monospace);
+	font-size: 0.9em;
 }
 
 .register {
-  width: 7.7em;
+	width: 7.7em;
 }

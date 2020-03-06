@@ -46,5 +46,6 @@ are related to graphics
 </table>
 
 ## Graphics mode
-- Mode 3: 15-bit bitmap
-- Mode 4: Palette bitmap
+
+-   Mode 3: 15-bit bitmap
+-   Mode 4: Palette bitmap

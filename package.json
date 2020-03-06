@@ -1,30 +1,34 @@
 {
-  "name": "lavender",
-  "version": "0.0.1",
-  "author": "McKayla Washburn",
-  "description": "A Gameboy Advanced emulator written in Rust",
-  "license": "MIT",
-  "dependencies": {
-    "react": "^16.11.0",
-    "react-dom": "^16.11.0"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.6.4",
-    "@babel/preset-env": "^7.6.3",
-    "@babel/preset-react": "^7.6.3",
-    "@babel/preset-typescript": "^7.6.0",
-    "@types/react": "^16.9.11",
-    "@types/react-dom": "^16.9.3",
-    "@wasm-tool/wasm-pack-plugin": "^1.0.0",
-    "babel-loader": "^8.0.6",
-    "html-webpack-plugin": "^3.2.0",
-    "webpack": "^4.39.2",
-    "webpack-cli": "^3.3.6",
-    "webpack-dev-server": "^3.8.0"
-  },
-  "scripts": {
-    "dev": "webpack-dev-server",
-    "release": "webpack-dev-server --mode=production",
-    "test": "cargo fmt && cargo clippy && cargo test && cargo doc --no-deps"
-  }
+	"name": "lavender",
+	"version": "0.0.1",
+	"author": "McKayla Washburn",
+	"description": "A Gameboy Advanced emulator written in Rust",
+	"license": "MIT",
+	"dependencies": {
+		"react": "^16.11.0",
+		"react-dom": "^16.11.0"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.6.4",
+		"@babel/preset-env": "^7.6.3",
+		"@babel/preset-react": "^7.6.3",
+		"@babel/preset-typescript": "^7.6.0",
+		"@types/react": "^16.9.11",
+		"@types/react-dom": "^16.9.3",
+		"@wasm-tool/wasm-pack-plugin": "^1.1.0",
+		"ava": "^3.5.0",
+		"babel-loader": "^8.0.6",
+		"html-webpack-plugin": "^3.2.0",
+		"prettier": "^1.19.1",
+		"webpack": "^4.39.2",
+		"webpack-cli": "^3.3.6",
+		"webpack-dev-server": "^3.8.0",
+		"webpackbar": "^4.0.0"
+	},
+	"scripts": {
+		"dev": "webpack-dev-server",
+		"fmt": "prettier book/**/*.md client/*.{css,html,tsx} .travis.yml package.json README.md webpack.config.js --write && cargo fmt",
+		"release": "webpack-dev-server --mode=production",
+		"test": "cargo fmt && cargo clippy && cargo test && cargo doc --no-deps"
+	}
 }
