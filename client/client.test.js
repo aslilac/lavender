@@ -1,13 +1,13 @@
-const test = require('ava');
+const test = require("ava");
 
-test('hello friend', t => {
+test("hello friend", t => {
 	t.true(true);
 });
 
-test('test placeholders', t => {
+test("test placeholders", t => {
 	t.true(true);
 });
 
-test('so robust, wow', t => {
+test("so robust, wow", t => {
 	t.true(true);
 });

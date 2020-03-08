@@ -1,4 +1,5 @@
 # References
+
 These links are all resources for development that I've found to contain useful,
 up-to-date, accurate, and relevant information. I would really like to express my
 appreciation to all of the people out there who put in the effort to create these
@@ -8,22 +9,25 @@ answers for without, as well as lots of test ROMs. This project may not have
 been possible (or at least not as good) without their contribution.
 
 ### Technical References
-- [ARM7TDMI Processor Technical Reference Manual](https://developer.arm.com/docs/ddi0210/c)
-- [ARM Architecture Reference Manual (PDF)](https://developer.arm.com/docs/ddi0100/latest/armv5-architecture-reference-manual) -
-Even though this manual is titled v5, it actually documents v4, v5, and v6. Don't
-let the name confuse you, this is an incredible resource.
+
+-   [ARM7TDMI Processor Technical Reference Manual](https://developer.arm.com/docs/ddi0210/c)
+-   [ARM Architecture Reference Manual (PDF)](https://developer.arm.com/docs/ddi0100/latest/armv5-architecture-reference-manual) -
+    Even though this manual is titled v5, it actually documents v4, v5, and v6. Don't
+    let the name confuse you, this is an incredible resource.
 
 ### Written References
-- [Audio Advance](http://www.belogic.com/gba/index.php)
-- [CowBite](https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm)
-- [gbadev](https://gbadev.org/docs.php)
-- [GBAGuy: GBA-ASM](https://patater.com/gbaguy/gbaasm.htm)
-- [GBATEK](https://problemkaputt.de/gbatek.htm)
-- [TONC](https://www.coranac.com/tonc/text/toc.htm)
+
+-   [Audio Advance](http://www.belogic.com/gba/index.php)
+-   [CowBite](https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm)
+-   [gbadev](https://gbadev.org/docs.php)
+-   [GBAGuy: GBA-ASM](https://patater.com/gbaguy/gbaasm.htm)
+-   [GBATEK](https://problemkaputt.de/gbatek.htm)
+-   [TONC](https://www.coranac.com/tonc/text/toc.htm)
 
 ### Implementation References
-- [IodineGBA (JavaScript)](https://github.com/taisel/IodineGBA)
-- [Lavender (Rust)](https://github.com/partheseas/lavender)
-- [mGBA (C)](https://github.com/mgba-emu/mgba)
-  - [BIOS Implementation](https://github.com/mgba-emu/mgba/blob/master/src/gba/hle-bios.c)
-- [VisualBoyAdvance-m (C++)](https://github.com/visualboyadvance-m/visualboyadvance-m/tree/master/src)
+
+-   [IodineGBA (JavaScript)](https://github.com/taisel/IodineGBA)
+-   [Lavender (Rust)](https://github.com/partheseas/lavender)
+-   [mGBA (C)](https://github.com/mgba-emu/mgba)
+    -   [BIOS Implementation](https://github.com/mgba-emu/mgba/blob/master/src/gba/hle-bios.c)
+-   [VisualBoyAdvance-m (C++)](https://github.com/visualboyadvance-m/visualboyadvance-m/tree/master/src)

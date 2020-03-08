@@ -3,11 +3,13 @@ body {
 	min-height: unset; /* Oui...sucks sometimes. */
 }
 
-#overlay {
+#overlay-container {
 	position: fixed;
 	left: 4vh;
 	top: 3vh;
+}
 
+#overlay {
 	width: 5.8in;
 	height: 2.1in;
 
@@ -46,12 +48,6 @@ body {
 	max-width: calc(92vh * 1.5);
 	margin: auto;
 	margin-top: 4vh;
-}
-
-@media screen and (max-width: calc(92vh * 1.5)) {
-	#display {
-		padding-top: 1.75in;
-	}
 }
 
 #status {

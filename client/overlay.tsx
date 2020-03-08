@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 
+import * as emulator from "../target/wasm-pack";
 import { Controller } from "./client";
+
+type Emulator = typeof emulator;
 
 const drawingModes = [
 	"[Object]\n    all 4 layers, no rotate or scale",
@@ -16,7 +19,7 @@ const color = (actual: number, yellow: number, red: number): string =>
 
 interface OverlayProps {
 	controller: Controller;
-	emulator: any;
+	emulator: Emulator;
 }
 
 export default function Overlay(props: OverlayProps) {
@@ -34,15 +37,14 @@ export default function Overlay(props: OverlayProps) {
 		}
 
 		try {
-			controller.render();
-			controller.updateOverlay();
+			controller.experimental_render();
 		} catch (e) {
 			console.error("Something went wrong in the render step", e);
 		}
 	};
 
 	return (
-		<>
+		<section id="overlay">
 			<h6>Status</h6>
 			<pre id="status">
 				Frame: {controller.frame}
@@ -111,7 +113,7 @@ export default function Overlay(props: OverlayProps) {
 					McKayla
 				</a>
 			</p>
-		</>
+		</section>
 	);
 }
 

@@ -1,13 +1,6 @@
 # macOS
 .DS_Store
 
-# Games and testing roms
-game
-rom_tests
-
-# Technical reference documents
-reference
-
 # Dependencies
 node_modules
 

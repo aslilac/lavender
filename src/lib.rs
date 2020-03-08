@@ -29,7 +29,7 @@ lazy_static! {
 
 /// Starts the emulation of the provided ROM.
 #[wasm_bindgen]
-pub fn start_emulation(rom: &[u8]) {
+pub fn init_emulation(rom: &[u8]) {
     let mut emulation = EMULATION.lock().unwrap();
 
     emulation.load_rom(&rom);
