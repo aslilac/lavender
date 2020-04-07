@@ -57,7 +57,6 @@ To get set up for development you need to install all of the following tools...
 -   [Node.js](https://nodejs.org)
 -   [Yarn](https://yarnpkg.com)
 -   [Rust](https://rustup.rs)
--   [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 
 Then run `yarn` and `cargo build` to install all the other dependencies from
 npm and Cargo.
