@@ -4,7 +4,6 @@ const path = require("path");
 const { DefinePlugin } = require("webpack");
 const WebpackBar = require("webpackbar");
 
-
 module.exports = (env, argv) => ({
 	// ------ webpack ------
 	entry: "./client/client.tsx",
@@ -17,7 +16,7 @@ module.exports = (env, argv) => ({
 	},
 
 	output: {
-		path: path.resolve(__dirname, "dist"),
+		path: path.resolve(__dirname, "target/webpack"),
 		filename: "client.js",
 	},
 
@@ -44,7 +43,7 @@ module.exports = (env, argv) => ({
 
 		// ------ Define variables at build time ------
 		new DefinePlugin({
-			'webpack_mode': JSON.stringify(argv.mode),
+			webpack_mode: JSON.stringify(argv.mode),
 		}),
 
 		// ------ wasm-pack ------

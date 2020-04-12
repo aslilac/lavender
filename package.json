@@ -9,10 +9,10 @@
 		"react-dom": "^16.11.0"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.6.4",
-		"@babel/preset-env": "^7.6.3",
-		"@babel/preset-react": "^7.6.3",
-		"@babel/preset-typescript": "^7.6.0",
+		"@babel/core": "^7.9.0",
+		"@babel/preset-env": "^7.9.0",
+		"@babel/preset-react": "^7.9.0",
+		"@babel/preset-typescript": "^7.9.0",
 		"@types/react": "^16.9.11",
 		"@types/react-dom": "^16.9.3",
 		"@wasm-tool/wasm-pack-plugin": "^1.1.0",
@@ -27,8 +27,10 @@
 		"webpackbar": "^4.0.0"
 	},
 	"scripts": {
+		"build": "webpack --mode=production",
 		"dev": "webpack-dev-server",
-		"fmt": "prettier book/**/*.md client/*.{css,html,tsx} .travis.yml package.json README.md webpack.config.js --write && cargo fmt",
+		"fmt": "prettier --ignore-path .gitignore --write . && cargo fmt",
+		"postinstall": "node ./bin/hello",
 		"release": "webpack-dev-server --mode=production",
 		"test": "cargo fmt && cargo clippy && cargo test && cargo doc --no-deps"
 	}
