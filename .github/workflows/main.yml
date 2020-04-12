@@ -22,12 +22,20 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
 
+            # Hacky and lame, but WasmPackPlugin won't create
+            # directories recursively, so we have to do it.
+            - run: mkdir target
+
             - run: yarn
             - run: yarn build
             - run: yarn ava
 
     build-rs:
         runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                rust-version: [stable, beta, nightly]
 
         steps:
             - uses: actions/checkout@v2
