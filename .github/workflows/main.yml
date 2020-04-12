@@ -13,6 +13,7 @@ jobs:
         strategy:
             matrix:
                 node-version: [10.x, 12.x]
+            fail-fast: false
 
         steps:
             - uses: actions/checkout@v2
@@ -43,6 +44,7 @@ jobs:
         strategy:
             matrix:
                 rust-version: [stable, beta, nightly]
+            fail-fast: false
 
         steps:
             - uses: actions/checkout@v2
@@ -52,10 +54,14 @@ jobs:
             - run: cargo --version
 
             - run: rustup component add rustfmt
+              if: matrix.rust-version == "stable"
             - run: rustup component add clippy
+              if: matrix.rust-version == "stable"
 
             - run: cargo fmt -- --check
+              if: matrix.rust-version == "stable"
             - run: cargo clippy
+              if: matrix.rust-version == "stable"
 
             - run: cargo build --verbose
             - run: cargo test --verbose
