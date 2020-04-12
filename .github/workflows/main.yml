@@ -47,6 +47,8 @@ jobs:
         steps:
             - uses: actions/checkout@v2
 
+            - run: rustup default ${{ matrix.rust-version }}
+
             - run: cargo --version
 
             - run: rustup component add rustfmt
