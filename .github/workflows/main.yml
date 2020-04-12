@@ -54,14 +54,14 @@ jobs:
             - run: cargo --version
 
             - run: rustup component add rustfmt
-              if: matrix.rust-version == stable
+              if: matrix.rust-version == 'stable'
             - run: rustup component add clippy
-              if: matrix.rust-version == stable
+              if: matrix.rust-version == 'stable'
 
             - run: cargo fmt -- --check
-              if: matrix.rust-version == stable
+              if: matrix.rust-version == 'stable'
             - run: cargo clippy
-              if: matrix.rust-version == stable
+              if: matrix.rust-version == 'stable'
 
             - run: cargo build --verbose
             - run: cargo test --verbose
