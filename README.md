@@ -2,8 +2,8 @@
 
 ![package version](https://img.shields.io/badge/lavender-v0.0.1-9394e4.svg)
 ![stability](https://img.shields.io/badge/stability-beta-6680f2.svg)
+[![build status](https://github.com/partheseas/lavender/workflows/main/badge.svg)](https://github.com/partheseas/lavender/actions)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
-[![Build Status](https://travis-ci.org/partheseas/lavender.svg?branch=master)](https://travis-ci.org/partheseas/lavender)
 
 A Game Boy Advance emulator written in Rust that runs in the browser.
 

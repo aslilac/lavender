@@ -27,11 +27,11 @@
 		"webpackbar": "^4.0.0"
 	},
 	"scripts": {
-		"build": "webpack --mode=production",
+		"build": "webpack --mode=production && cargo doc --no-deps",
 		"dev": "webpack-dev-server",
 		"fmt": "prettier --ignore-path .gitignore --write . && cargo fmt",
 		"postinstall": "node ./bin/hello",
 		"release": "webpack-dev-server --mode=production",
-		"test": "cargo fmt && cargo clippy && cargo test && cargo doc --no-deps"
+		"test": "ava && cargo test"
 	}
 }

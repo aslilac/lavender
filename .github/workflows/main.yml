@@ -26,7 +26,14 @@ jobs:
             # directories recursively, so we have to do it.
             - run: mkdir target
 
+            - run: node -v
+            - run: yarn -v
+            - run: cargo --version
+
             - run: yarn
+
+            - run: yarn prettier --ignore-path .gitignore --check .
+
             - run: yarn build
             - run: yarn ava
 
@@ -39,6 +46,8 @@ jobs:
 
         steps:
             - uses: actions/checkout@v2
+
+            - run: cargo --version
 
             - run: rustup component add rustfmt
             - run: rustup component add clippy

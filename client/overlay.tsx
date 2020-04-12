@@ -73,10 +73,7 @@ export default function Overlay(props: OverlayProps) {
 					),
 				)}
 				<span className="internal register">
-					{emulator
-						.read_cpsr()
-						.toString(16)
-						.padStart(8, "0")}
+					{emulator.read_cpsr().toString(16).padStart(8, "0")}
 					<sub className="register-label">cpsr</sub>
 				</span>
 			</div>
@@ -85,10 +82,7 @@ export default function Overlay(props: OverlayProps) {
 			<label>Instruction prefetch</label>
 			<br />
 			<code id="next-instruction" className="internal">
-				{emulator
-					.read_next_instruction()
-					.toString(2)
-					.padStart(32, "0")}
+				{emulator.read_next_instruction().toString(2).padStart(32, "0")}
 			</code>
 
 			<h6>IO</h6>

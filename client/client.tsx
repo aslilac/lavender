@@ -111,7 +111,7 @@ export class Controller {
 		this.showOverlay = webpack_mode !== "production";
 
 		// Allow spacebar to begin emulation
-		window.addEventListener("keydown", event => {
+		window.addEventListener("keydown", (event) => {
 			if (event.code === "Space") {
 				this.shouldEmulate = !this.shouldEmulate;
 				if (this.shouldEmulate) {
@@ -233,10 +233,16 @@ export class Controller {
 		const imageData = new ImageData(translation, 240, 160);
 		// console.log(imageData);
 
-		type CorrectedSignature = (imageData: ImageData, scaleOptions?: ScaleOptions) => Promise<ImageBitmap>;
-		console.time('createImageBitmap');
-		(createImageBitmap as CorrectedSignature)(imageData, this.scaleOptions).then(image => {
-			console.timeEnd('createImageBitmap');
+		type CorrectedSignature = (
+			imageData: ImageData,
+			scaleOptions?: ScaleOptions,
+		) => Promise<ImageBitmap>;
+		console.time("createImageBitmap");
+		(createImageBitmap as CorrectedSignature)(
+			imageData,
+			this.scaleOptions,
+		).then((image) => {
+			console.timeEnd("createImageBitmap");
 			// console.log("here we go", image);
 			this.context.drawImage(image, 0, 0);
 		});
@@ -246,7 +252,9 @@ export class Controller {
 
 	updateOverlay() {
 		ReactDOM.render(
-			this.showOverlay && <Overlay controller={this} emulator={this.emulator} />,
+			this.showOverlay && (
+				<Overlay controller={this} emulator={this.emulator} />
+			),
 			document.querySelector("#overlay-container"),
 		);
 	}
@@ -262,8 +270,8 @@ Promise.all([
 	// Load the rom into the emulator
 	// fetch( '/game/pokemon_emerald.gba' )
 	fetch("/resources/rom_tests/bin/first.gba")
-		.then(response => response.arrayBuffer())
-		.then(buffer => {
+		.then((response) => response.arrayBuffer())
+		.then((buffer) => {
 			emulator.init_emulation(new Uint8Array(buffer));
 			new Controller(emulator, memory).enableDrawing();
 		});
