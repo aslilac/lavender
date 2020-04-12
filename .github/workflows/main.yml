@@ -51,6 +51,7 @@ jobs:
 
             - run: rustup default ${{ matrix.rust-version }}
 
+            - run: rustc --version
             - run: cargo --version
 
             - run: rustup component add rustfmt

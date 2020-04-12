@@ -4,6 +4,7 @@
 	"author": "McKayla Washburn",
 	"description": "A Gameboy Advanced emulator written in Rust",
 	"license": "MIT",
+	"repository": "https://github.com/partheseas/lavender",
 	"dependencies": {
 		"react": "^16.11.0",
 		"react-dom": "^16.11.0"
@@ -27,7 +28,8 @@
 		"webpackbar": "^4.0.0"
 	},
 	"scripts": {
-		"build": "webpack --mode=production && cargo doc --no-deps",
+		"build": "webpack --mode=production",
+		"build:docs": "cargo doc --no-deps && mdbook build",
 		"dev": "webpack-dev-server",
 		"fmt": "prettier --ignore-path .gitignore --write . && cargo fmt",
 		"postinstall": "node ./bin/hello",
