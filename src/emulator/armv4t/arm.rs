@@ -521,21 +521,25 @@ pub mod instructions {
         // The overflow flag is only relevant when dealing with signed numbers. ALU of course
         // doesn't care but Rust's unsigned `overflowing_sub` does not always return the overflow
         // flag when you would expect it to be set.
-        let (value, overflow) = (operand_register_value as i32).overflowing_sub(shifter_operand_value as i32);
+        let (value, overflow) =
+            (operand_register_value as i32).overflowing_sub(shifter_operand_value as i32);
 
-        emulator.cpu.set_register_value(destination_register, value as u32);
+        emulator
+            .cpu
+            .set_register_value(destination_register, value as u32);
 
         if should_update_flags && destination_register == RegisterNames::r15 {
             if emulator.cpu.current_mode_has_spsr() {
-                emulator.cpu.set_register_value(RegisterNames::cpsr, emulator.cpu.get_register_value(RegisterNames::spsr));
-            }
-            else {
+                emulator.cpu.set_register_value(
+                    RegisterNames::cpsr,
+                    emulator.cpu.get_register_value(RegisterNames::spsr),
+                );
+            } else {
                 // Supposedly unpredictable behaviour but the CPU might be able to deal with it, in
                 // a perfectly predictable way... Worry about it later, if it actually ever happens.
                 panic!("SUB: unpredictable");
             }
-        }
-        else if should_update_flags {
+        } else if should_update_flags {
             emulator.cpu.set_nzcv(
                 value >> 31 & 1 > 0,
                 value == 0,
