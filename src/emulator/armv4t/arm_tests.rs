@@ -277,6 +277,167 @@ fn decode_strt() {
 }
 
 #[test]
+fn behavior_sub() {
+    let mut emulator = Emulator::dummy();
+
+    // sub{s} r0, r1, r2
+    let instruction = 0xE051_0002;
+
+    // r1 = 0xFFFF_FFFE
+    // r2 = 0x7FFF_FFFF
+    // r0 = 0x7FFF_FFFF
+    // nzcv = 0b0011
+    {
+        emulator.cpu.set_register_value(r1, 0xFFFF_FFFE);
+        emulator.cpu.set_register_value(r2, 0x7FFF_FFFF);
+
+        process_instruction(&mut emulator, instruction);
+
+        assert_eq!(emulator.cpu.get_register_value(r0), 0x7FFF_FFFF);
+        assert_eq!(emulator.cpu.get_n(), false);
+        assert_eq!(emulator.cpu.get_z(), false);
+        assert_eq!(emulator.cpu.get_c(), true);
+        assert_eq!(emulator.cpu.get_v(), true);
+    }
+
+    // r1 = 0x1
+    // r2 = 0x1
+    // r0 = 0x0
+    // nzcv = 0b0110
+    {
+        emulator.cpu.set_register_value(r1, 0x1);
+        emulator.cpu.set_register_value(r2, 0x1);
+
+        process_instruction(&mut emulator, instruction);
+
+        assert_eq!(emulator.cpu.get_register_value(r0), 0x0);
+        assert_eq!(emulator.cpu.get_n(), false);
+        assert_eq!(emulator.cpu.get_z(), true);
+        assert_eq!(emulator.cpu.get_c(), true);
+        assert_eq!(emulator.cpu.get_v(), false);
+    }
+
+    // r1 = 0x0
+    // r2 = 0x1
+    // r0 = 0xFFFF_FFFF
+    // nzcv = 0b1000
+    {
+        emulator.cpu.set_register_value(r1, 0x0);
+        emulator.cpu.set_register_value(r2, 0x1);
+
+        process_instruction(&mut emulator, instruction);
+
+        assert_eq!(emulator.cpu.get_register_value(r0), 0xFFFF_FFFF);
+        assert_eq!(emulator.cpu.get_n(), true);
+        assert_eq!(emulator.cpu.get_z(), false);
+        assert_eq!(emulator.cpu.get_c(), false);
+        assert_eq!(emulator.cpu.get_v(), false);
+    }
+
+    // r1 = 0xFFFF_FFFF
+    // r2 = 0xFFFF_FFFE
+    // r0 = 0x1
+    // nzcv = 0b0010
+    {
+        emulator.cpu.set_register_value(r1, 0xFFFF_FFFF);
+        emulator.cpu.set_register_value(r2, 0xFFFF_FFFE);
+
+        process_instruction(&mut emulator, instruction);
+
+        assert_eq!(emulator.cpu.get_register_value(r0), 0x1);
+        assert_eq!(emulator.cpu.get_n(), false);
+        assert_eq!(emulator.cpu.get_z(), false);
+        assert_eq!(emulator.cpu.get_c(), true);
+        assert_eq!(emulator.cpu.get_v(), false);
+    }
+
+    // r1 = 0x0
+    // r2 = 0xFFFF_FFFF
+    // r0 = 0x1
+    // nzcv = 0b0000
+    {
+        emulator.cpu.set_register_value(r1, 0x0);
+        emulator.cpu.set_register_value(r2, 0xFFFF_FFFF);
+
+        process_instruction(&mut emulator, instruction);
+
+        assert_eq!(emulator.cpu.get_register_value(r0), 0x1);
+        assert_eq!(emulator.cpu.get_n(), false);
+        assert_eq!(emulator.cpu.get_z(), false);
+        assert_eq!(emulator.cpu.get_c(), false);
+        assert_eq!(emulator.cpu.get_v(), false);
+    }
+
+    // r1 = 0x2
+    // r2 = 0x1
+    // r0 = 0x1
+    // nzcv = 0b0010
+    {
+        emulator.cpu.set_register_value(r1, 0x2);
+        emulator.cpu.set_register_value(r2, 0x1);
+
+        process_instruction(&mut emulator, instruction);
+
+        assert_eq!(emulator.cpu.get_register_value(r0), 0x1);
+        assert_eq!(emulator.cpu.get_n(), false);
+        assert_eq!(emulator.cpu.get_z(), false);
+        assert_eq!(emulator.cpu.get_c(), true);
+        assert_eq!(emulator.cpu.get_v(), false);
+    }
+
+    // r1 = 0xFFFF_FFFF
+    // r2 = 0xFFFF_FFFF
+    // r0 = 0x0
+    // nzcv = 0b0110
+    {
+        emulator.cpu.set_register_value(r1, 0xFFFF_FFFF);
+        emulator.cpu.set_register_value(r2, 0xFFFF_FFFF);
+
+        process_instruction(&mut emulator, instruction);
+
+        assert_eq!(emulator.cpu.get_register_value(r0), 0x0);
+        assert_eq!(emulator.cpu.get_n(), false);
+        assert_eq!(emulator.cpu.get_z(), true);
+        assert_eq!(emulator.cpu.get_c(), true);
+        assert_eq!(emulator.cpu.get_v(), false);
+    }
+
+    // r1 = 0xFFFF_FFFE
+    // r2 = 0xFFFF_FFFF
+    // r0 = 0xFFFF_FFFF
+    // nzcv = 0b0110
+    {
+        emulator.cpu.set_register_value(r1, 0xFFFF_FFFE);
+        emulator.cpu.set_register_value(r2, 0xFFFF_FFFF);
+
+        process_instruction(&mut emulator, instruction);
+
+        assert_eq!(emulator.cpu.get_register_value(r0), 0xFFFF_FFFF);
+        assert_eq!(emulator.cpu.get_n(), true);
+        assert_eq!(emulator.cpu.get_z(), false);
+        assert_eq!(emulator.cpu.get_c(), false);
+        assert_eq!(emulator.cpu.get_v(), false);
+    }
+
+    // r1 = 0x7FFF_FFFF
+    // r2 = 0xFFFF_FFFF
+    // r0 = 0x8000_0000
+    // nzcv = 0b1001
+    {
+        emulator.cpu.set_register_value(r1, 0x7FFF_FFFF);
+        emulator.cpu.set_register_value(r2, 0xFFFF_FFFF);
+
+        process_instruction(&mut emulator, instruction);
+
+        assert_eq!(emulator.cpu.get_register_value(r0), 0x8000_0000);
+        assert_eq!(emulator.cpu.get_n(), true);
+        assert_eq!(emulator.cpu.get_z(), false);
+        assert_eq!(emulator.cpu.get_c(), false);
+        assert_eq!(emulator.cpu.get_v(), true);
+    }
+}
+
+#[test]
 fn decode_sub() {
     assert_eq!(decode_instruction(0x0_04_000_0_0) as usize, sub as usize);
 }

@@ -497,7 +497,54 @@ pub mod instructions {
     pub fn strt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }
-    pub fn sub(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+
+    /// Substraction
+    pub fn sub(emulator: &mut Emulator, instruction: u32) -> u32 {
+        /*
+        if ConditionPassed(cond) then
+            Rd = Rn - shifter_operand
+            if S == 1 and Rd == R15 then
+                if CurrentModeHasSPSR() then
+                    CPSR = SPSR
+                else UNPREDICTABLE
+            else if S == 1 then
+                N Flag = Rd[31]
+                Z Flag = if Rd == 0 then 1 else 0
+                C Flag = NOT BorrowFrom(Rn - shifter_operand)
+                V Flag = OverflowFrom(Rn - shifter_operand)
+        */
+        let should_update_flags = instruction >> 20 & 1 > 0;
+
+        let (destination_register, operand_register_value, shifter_operand_value) =
+            get_data_processing_operands(emulator, instruction);
+
+        // The overflow flag is only relevant when dealing with signed numbers. ALU of course
+        // doesn't care but Rust's unsigned `overflowing_sub` does not always return the overflow
+        // flag when you would expect it to be set.
+        let (value, overflow) = (operand_register_value as i32).overflowing_sub(shifter_operand_value as i32);
+
+        emulator.cpu.set_register_value(destination_register, value as u32);
+
+        if should_update_flags && destination_register == RegisterNames::r15 {
+            if emulator.cpu.current_mode_has_spsr() {
+                emulator.cpu.set_register_value(RegisterNames::cpsr, emulator.cpu.get_register_value(RegisterNames::spsr));
+            }
+            else {
+                // Supposedly unpredictable behaviour but the CPU might be able to deal with it, in
+                // a perfectly predictable way... Worry about it later, if it actually ever happens.
+                panic!("SUB: unpredictable");
+            }
+        }
+        else if should_update_flags {
+            emulator.cpu.set_nzcv(
+                value >> 31 & 1 > 0,
+                value == 0,
+                operand_register_value >= shifter_operand_value,
+                overflow,
+            );
+        }
+
+        // TODO: Uhhh... Figuring this out right now is a waste of time :>
         1
     }
     /// Triggers an interupt vector from software. Usually used to make system

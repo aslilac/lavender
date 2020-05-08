@@ -238,6 +238,16 @@ impl Arm7Tdmi {
         }
     }
 
+    pub fn current_mode_has_spsr(&self) -> bool {
+        let current_mode = self.get_operation_mode().expect("TODO");
+
+        if current_mode == OperationModes::USR || current_mode == OperationModes::SYS {
+            return false;
+        }
+
+        true
+    }
+
     pub fn exception() {}
 
     pub fn check_condition(&self, cond: ConditionCodes) -> bool {
