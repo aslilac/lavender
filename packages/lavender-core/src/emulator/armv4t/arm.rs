@@ -161,6 +161,24 @@ mod internal {
         emulator.memory.write_word(address, value);
     }
 
+    pub fn store_register(emulator: &mut Emulator, source_register: RegisterNames, address: u32) {
+        let source_register_value = emulator.cpu.get_register_value(source_register);
+
+        write_word(emulator, address & 0xFFFF_FFFC, source_register_value);
+    }
+
+    // Main bits of the load/store instructions, these are used in both the normal instructions and
+    // in the with translation instructions.
+    pub fn store_register_byte(
+        emulator: &mut Emulator,
+        source_register: RegisterNames,
+        address: u32,
+    ) {
+        let source_register_value = emulator.cpu.get_register_value(source_register);
+
+        write_byte(emulator, address, (source_register_value & 0xff) as u8);
+    }
+
     pub fn load_store_instruction_wrapper(
         emulator: &mut Emulator,
         instruction: u32,
@@ -540,7 +558,30 @@ pub mod instructions {
     pub fn stm(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }
-    pub fn str(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+
+    /// Store register
+    pub fn str(emulator: &mut Emulator, instruction: u32) -> u32 {
+        /*
+        MemoryAccess(B-bit, E-bit)
+        processor_id = ExecutingProcessor()
+        if ConditionPassed(cond) then
+            Memory[address,4] = Rd
+            if Shared(address) then /* from ARMv6 */
+                physical_address = TLB(address)
+                ClearExclusiveByAddress(physical_address,processor_id,4)
+                /* See Summary of operation on page A2-49 */
+        */
+
+        // Probably don't need to worry about the processor ID etc. because there is only one
+        // processor which interacts with the MMU (hopefully?). The ClearExclusiveByAddress is used
+        // to clear any requests for exclusive access, from an address range, for all processors,
+        // other than the one specified by processor ID. This is only valid for ARM architectures
+        // from ARMv6 onwards.
+
+        // MemoryAccess(B-bit, E-bit) defines the endian model (see Glossary-9).
+
+        load_store_instruction_wrapper(emulator, instruction, store_register);
+
         1
     }
     pub fn strb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
