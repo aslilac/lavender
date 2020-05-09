@@ -10,3 +10,5 @@ pub mod utils;
 mod arm_tests;
 #[cfg(test)]
 mod thumb_tests;
+#[cfg(test)]
+mod utils_tests;
