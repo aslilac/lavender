@@ -200,6 +200,17 @@ mod internal {
         }
     }
 
+    pub fn load_register_byte(
+        emulator: &mut Emulator,
+        destination_register: RegisterNames,
+        address: u32,
+    ) {
+        let value = emulator.memory.read_byte(address);
+        emulator
+            .cpu
+            .set_register_value(destination_register, value as u32);
+    }
+
     pub fn load_store_instruction_wrapper(
         emulator: &mut Emulator,
         instruction: u32,
@@ -510,7 +521,16 @@ pub mod instructions {
         5
     }
 
-    pub fn ldrb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+    /// Load register byte
+    pub fn ldrb(emulator: &mut Emulator, instruction: u32) -> u32 {
+        /*
+        MemoryAccess(B-bit, E-bit)
+        if ConditionPassed(cond) then
+            Rd = Memory[address,1]
+        */
+
+        load_store_instruction_wrapper(emulator, instruction, load_register_byte);
+
         1
     }
     pub fn ldrbt(_emulator: &mut Emulator, _instruction: u32) -> u32 {

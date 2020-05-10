@@ -223,6 +223,53 @@ fn decode_ldrb() {
 }
 
 #[test]
+fn behavior_ldrb() {
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0008, 0xaabb_ccdd);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0101_1101_0010_0001_0000_0000_1010 - ldrb r1,[r2,0x00A]
+        process_instruction(&mut emulator, 0xE5D2_100A);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xbb);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0000);
+    }
+
+    // Post-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0000, 0xaabb_ccdd);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0100_1101_0010_0001_0000_0000_0101 - ldrb r1,[r2],0x5
+        process_instruction(&mut emulator, 0xE4D2_1005);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xdd);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0005);
+    }
+
+    // Pre-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0010, 0xaabb_ccdd);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0101_1111_0010_0001_0000_0001_0000 - ldrb r1,[r2,0x10]!
+        process_instruction(&mut emulator, 0xE5F2_1010);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xdd);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0010);
+    }
+}
+
+#[test]
 fn decode_ldrbt() {
     assert_eq!(decode_instruction(0x0_47_000_0_0) as usize, ldrbt as usize);
 }
