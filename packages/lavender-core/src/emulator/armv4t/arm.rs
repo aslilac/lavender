@@ -161,14 +161,14 @@ mod internal {
         emulator.memory.write_word(address, value);
     }
 
+    // Main bits of the load/store instructions, these are used in both the normal instructions and
+    // in the with translation instructions.
     pub fn store_register(emulator: &mut Emulator, source_register: RegisterNames, address: u32) {
         let source_register_value = emulator.cpu.get_register_value(source_register);
 
         write_word(emulator, address & 0xFFFF_FFFC, source_register_value);
     }
 
-    // Main bits of the load/store instructions, these are used in both the normal instructions and
-    // in the with translation instructions.
     pub fn store_register_byte(
         emulator: &mut Emulator,
         source_register: RegisterNames,
@@ -584,7 +584,17 @@ pub mod instructions {
 
         1
     }
-    pub fn strb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+
+    /// Store register byte
+    pub fn strb(emulator: &mut Emulator, instruction: u32) -> u32 {
+        /*
+        processor_id = ExecutingProcessor()
+        if ConditionPassed(cond) then
+            Memory[address,1] = Rd[7:0]
+        */
+
+        load_store_instruction_wrapper(emulator, instruction, store_register_byte);
+
         1
     }
     pub fn strbt(_emulator: &mut Emulator, _instruction: u32) -> u32 {

@@ -309,6 +309,62 @@ fn decode_strb() {
 }
 
 #[test]
+fn behavior_strb() {
+    // Offset
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.cpu.set_register_value(r1, 0xffff_ffaa);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0101_1100_0010_0001_0000_0000_1010 - strb r1,[r2,0x00A]
+        process_instruction(&mut emulator, 0xE5C2_100A);
+
+        assert_eq!(emulator.memory.read_byte(0x0300_0009), 0x0);
+        assert_eq!(emulator.memory.read_byte(0x0300_000A), 0xaa);
+        assert_eq!(emulator.memory.read_byte(0x0300_000B), 0x0);
+
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0000);
+    }
+
+    // Post-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.cpu.set_register_value(r1, 0xffff_ffbb);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0100_1100_0010_0001_0000_0000_0101 - strb r1,[r2],0x5
+        process_instruction(&mut emulator, 0xE4C2_1005);
+
+        assert_eq!(emulator.memory.read_byte(0x0300_0000), 0xbb);
+        assert_eq!(emulator.memory.read_byte(0x0300_0001), 0x0);
+
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0005);
+    }
+
+    // Pre-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.cpu.set_register_value(r1, 0xffff_ffcc);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0101_1110_0010_0001_0000_0001_0000 - strb r1,[r2,0x10]!
+        process_instruction(&mut emulator, 0xE5E2_1010);
+
+        assert_eq!(emulator.memory.read_byte(0x0300_000F), 0x0);
+        assert_eq!(emulator.memory.read_byte(0x0300_0010), 0xcc);
+        assert_eq!(emulator.memory.read_byte(0x0300_0011), 0x0);
+
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0010);
+    }
+}
+
+#[test]
 fn decode_strbt() {
     assert_eq!(decode_instruction(0x0_46_000_0_0) as usize, strbt as usize);
 }
