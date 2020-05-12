@@ -235,6 +235,34 @@ mod internal {
 
         operation(emulator, source_or_destination_register, address);
     }
+
+    /// Common functionality of miscellaneous load/store instructions
+    pub fn misc_load_store_instruction_wrapper(
+        emulator: &mut Emulator,
+        instruction: u32,
+        operation: fn(&mut Emulator, RegisterNames, u32),
+    ) {
+        let source_or_destination_register =
+            RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
+
+        debug_assert_ne!(
+            source_or_destination_register, r15,
+            "Misc loads/stores: result unpredictable if destination/source register is r15"
+        );
+
+        let (address, addressing_type) = process_misc_addressing_mode(emulator, instruction);
+
+        debug_assert!(
+            !(addressing_type == AddressingType::PreIndexed
+                && source_or_destination_register
+                    == RegisterNames::try_from(instruction >> 16 & 0xf).unwrap()),
+            "Misc loads/stores: result unpredictable if Rn == Rd and addressing type is PreIndexed"
+        );
+
+        debug_assert!(!(instruction >> 5 & 0x1 == 0x1 && address & 0x1 == 0x1), "Misc loads/stores: unpredictable if address is not halfword aligned for halfword reads/writes");
+
+        operation(emulator, source_or_destination_register, address);
+    }
 }
 
 /// A module containing functions which implement all of the 32-bit ARM v4T

@@ -129,6 +129,52 @@ pub fn process_addressing_mode(emulator: &mut Emulator, instruction: u32) -> (u3
     }
 }
 
+pub fn process_misc_addressing_mode(
+    emulator: &mut Emulator,
+    instruction: u32,
+) -> (u32, AddressingType) {
+    let immediate_offset = instruction >> 22 & 0x1 == 0x1;
+    let add_offset = instruction >> 23 & 0x1 == 0x1;
+    let post_index_addressing = instruction >> 24 & 0x1 == 0x0;
+
+    let offset = if immediate_offset {
+        let immediate_high = instruction >> 8 & 0xf;
+        let immediate_low = instruction & 0xf;
+
+        (immediate_high << 4) | immediate_low
+    } else {
+        emulator
+            .cpu
+            .get_register_value(RegisterNames::try_from(instruction & 0xf).unwrap())
+    };
+
+    let base_register = RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
+    let base_register_value = emulator.cpu.get_register_value(base_register);
+
+    let (address, _) = if add_offset {
+        base_register_value.overflowing_add(offset)
+    } else {
+        base_register_value.overflowing_sub(offset)
+    };
+
+    if post_index_addressing {
+        emulator.cpu.set_register_value(base_register, address);
+
+        (base_register_value, AddressingType::PostIndexed)
+    } else {
+        let write_address_to_base_register = instruction >> 21 & 0x1 == 0x1;
+
+        let addressing_type = if write_address_to_base_register {
+            emulator.cpu.set_register_value(base_register, address);
+            AddressingType::PreIndexed
+        } else {
+            AddressingType::Offset
+        };
+
+        (address, addressing_type)
+    }
+}
+
 pub fn get_data_processing_operands(
     emulator: &mut Emulator,
     instruction: u32,
@@ -144,4 +190,12 @@ pub fn get_data_processing_operands(
         operand_register_value,
         shifter_operand_value,
     )
+}
+
+/// Common addressing types
+#[derive(Debug, PartialEq)]
+pub enum AddressingType {
+    Offset,
+    PreIndexed,
+    PostIndexed,
 }

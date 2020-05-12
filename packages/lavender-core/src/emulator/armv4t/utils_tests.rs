@@ -307,3 +307,112 @@ fn test_addressing_mode_2_scaled_register_preindexed_lsl() {
         assert_eq!(emulator.cpu.get_register_value(r2), 0x0000_0001);
     }
 }
+
+#[test]
+fn test_addressing_mode_3_immediate_offset() {
+    let mut emulator = Emulator::dummy();
+
+    {
+        emulator.cpu.set_register_value(r1, 0x4000_0000);
+
+        //   cond    P U WL Rn   Rd   immH  SH  immL
+        // 0b1110_0001_1101_0001_0010_1000_1011_0001 - ldrh r2,[r1,0x81]
+        let (address, addressing_type) = process_misc_addressing_mode(&mut emulator, 0xE1D1_28B1);
+        assert_eq!(address, 0x4000_0081);
+        assert_eq!(addressing_type, AddressingType::Offset);
+        assert_eq!(emulator.cpu.get_register_value(r1), 0x4000_0000);
+    }
+
+    // Substract offset
+    {
+        //   cond    P U WL Rn   Rd   immH  SH  immL
+        // 0b1110_0001_0101_0001_0010_1000_1011_0001 - ldrh r2,[r1,-0x81]
+        let (address, addressing_type) = process_misc_addressing_mode(&mut emulator, 0xE151_28B1);
+        assert_eq!(address, 0x3FFF_FF7F);
+        assert_eq!(addressing_type, AddressingType::Offset);
+        assert_eq!(emulator.cpu.get_register_value(r1), 0x4000_0000);
+    }
+}
+
+#[test]
+fn test_addressing_mode_3_register_offset() {
+    let mut emulator = Emulator::dummy();
+
+    {
+        emulator.cpu.set_register_value(r1, 0x4000_0000);
+        emulator.cpu.set_register_value(r3, 0x1000_0000);
+
+        //   cond    P U WL Rn   Rd   SBZ   SH  Rm
+        // 0b1110_0001_1001_0001_0010_0000_1011_0011 - ldrh r2,[r1,r3]
+        let (address, addressing_type) = process_misc_addressing_mode(&mut emulator, 0xE191_20B3);
+        assert_eq!(address, 0x5000_0000);
+        assert_eq!(addressing_type, AddressingType::Offset);
+        assert_eq!(emulator.cpu.get_register_value(r1), 0x4000_0000);
+    }
+}
+
+#[test]
+fn test_addressing_mode_3_immediate_preindexed() {
+    let mut emulator = Emulator::dummy();
+
+    {
+        emulator.cpu.set_register_value(r1, 0x4000_0000);
+
+        //   cond    P U WL Rn   Rd   immH  SH  Rm
+        // 0b1110_0001_1111_0001_0010_1000_1011_0001 - ldrh r2,[r1,0x81]!
+        let (address, addressing_type) = process_misc_addressing_mode(&mut emulator, 0xE1F1_28B1);
+        assert_eq!(address, 0x4000_0081);
+        assert_eq!(addressing_type, AddressingType::PreIndexed);
+        assert_eq!(emulator.cpu.get_register_value(r1), 0x4000_0081);
+    }
+}
+
+#[test]
+fn test_addressing_mode_3_register_preindexed() {
+    let mut emulator = Emulator::dummy();
+
+    {
+        emulator.cpu.set_register_value(r1, 0x4000_0000);
+        emulator.cpu.set_register_value(r3, 0x1000_0000);
+
+        //   cond    P U WL Rn   Rd   SBZ   SH  Rm
+        // 0b1110_0001_1011_0001_0010_0000_1011_0011 - ldrh r2,[r1,r3]!
+        let (address, addressing_type) = process_misc_addressing_mode(&mut emulator, 0xE1B1_20B3);
+        assert_eq!(address, 0x5000_0000);
+        assert_eq!(addressing_type, AddressingType::PreIndexed);
+        assert_eq!(emulator.cpu.get_register_value(r1), 0x5000_0000);
+    }
+}
+
+#[test]
+fn test_addressing_mode_3_immediate_postindexed() {
+    let mut emulator = Emulator::dummy();
+
+    {
+        emulator.cpu.set_register_value(r1, 0x4000_0000);
+
+        //   cond    P U WL Rn   Rd   immH  SH  Rm
+        // 0b1110_0000_1101_0001_0010_1000_1011_0001 - ldrh r2,[r1],0x81
+        let (address, addressing_type) = process_misc_addressing_mode(&mut emulator, 0xE0D1_28B1);
+        assert_eq!(address, 0x4000_0000);
+        assert_eq!(addressing_type, AddressingType::PostIndexed);
+        assert_eq!(emulator.cpu.get_register_value(r1), 0x4000_0081);
+    }
+}
+
+#[test]
+fn test_addressing_mode_3_register_postindexed() {
+    let mut emulator = Emulator::dummy();
+
+    {
+        emulator.cpu.set_register_value(r1, 0x4000_0000);
+        emulator.cpu.set_register_value(r3, 0x1000_0000);
+
+        //   cond    P U WL Rn   Rd   SBZ   SH  Rm
+        // 0b1110_0000_1001_0001_0010_0000_1011_0011 - ldrh r2,[r1],r3
+        let (address, addressing_type) = process_misc_addressing_mode(&mut emulator, 0xE091_20B3);
+        assert_eq!(address, 0x4000_0000);
+        assert_eq!(addressing_type, AddressingType::PostIndexed);
+        assert_eq!(emulator.cpu.get_register_value(r1), 0x5000_0000);
+    }
+}
