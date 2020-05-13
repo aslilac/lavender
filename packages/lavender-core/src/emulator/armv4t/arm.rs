@@ -597,7 +597,20 @@ pub mod instructions {
 
         1
     }
-    pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+
+    /// Load register signed halfword
+    pub fn ldrsh(emulator: &mut Emulator, instruction: u32) -> u32 {
+        misc_load_store_instruction_wrapper(
+            emulator,
+            instruction,
+            |emulator, destination_register, address| {
+                let value = (read_half_word(emulator, address) as i32) << 16 >> 16;
+                emulator
+                    .cpu
+                    .set_register_value(destination_register, value as u32);
+            },
+        );
+
         1
     }
     pub fn ldrt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
