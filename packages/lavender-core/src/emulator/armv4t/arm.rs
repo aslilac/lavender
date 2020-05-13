@@ -269,6 +269,7 @@ mod internal {
 /// instructions.
 pub mod instructions {
     use crate::emulator::{
+        armv4t::arm::internal::*,
         armv4t::utils::*,
         cpu::{RegisterNames::*, *},
         Emulator,
@@ -667,7 +668,19 @@ pub mod instructions {
     pub fn strbt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }
-    pub fn strh(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+
+    /// Store half-word
+    pub fn strh(emulator: &mut Emulator, instruction: u32) -> u32 {
+        misc_load_store_instruction_wrapper(
+            emulator,
+            instruction,
+            |emulator, source_register, address| {
+                let value = emulator.cpu.get_register_value(source_register) & 0xffff;
+
+                write_half_word(emulator, address, value as u16);
+            },
+        );
+
         1
     }
     pub fn strt(_emulator: &mut Emulator, _instruction: u32) -> u32 {

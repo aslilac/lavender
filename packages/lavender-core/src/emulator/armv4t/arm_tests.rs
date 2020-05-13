@@ -499,6 +499,51 @@ fn decode_strh() {
 }
 
 #[test]
+fn behavior_strh() {
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.cpu.set_register_value(r1, 0xaaaa_bbcc);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   addr      addr
+        // 0b1110_0001_1100_0010_0001_0000_1011_0100 - strh r1,[r2,0x4]
+        process_instruction(&mut emulator, 0xE1C2_10B4);
+        assert_eq!(emulator.memory.read_half_word(0x0300_0004), 0xbbcc);
+    }
+
+    // Pre-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.cpu.set_register_value(r1, 0xaaaa_bbcc);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   addr      addr
+        // 0b1110_0001_1110_0010_0001_0000_1011_0100 - strh r1,[r2,0x4]!
+        process_instruction(&mut emulator, 0xE1E2_10B4);
+
+        assert_eq!(emulator.memory.read_half_word(0x0300_0004), 0xbbcc);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0004);
+    }
+
+    // Post-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.cpu.set_register_value(r1, 0xaaaa_bbcc);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   addr      addr
+        // 0b1110_0000_1100_0010_0001_0000_1011_0100 - strh r1,[r2],0x4
+        process_instruction(&mut emulator, 0xE0C2_10B4);
+
+        assert_eq!(emulator.memory.read_half_word(0x0300_0000), 0xbbcc);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0004);
+    }
+}
+
+#[test]
 fn decode_strt() {
     assert_eq!(decode_instruction(0x0_42_000_0_0) as usize, strt as usize);
 }
