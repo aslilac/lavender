@@ -332,6 +332,68 @@ fn decode_ldrsb() {
 }
 
 #[test]
+fn behavior_ldrsb() {
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0004, 0xaaaa_bbcc);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   addr      addr
+        // 0b1110_0001_1101_0010_0001_0000_1101_0100 - ldrsb r1,[r2,0x4]
+        process_instruction(&mut emulator, 0xE1D2_10D4);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xffff_ffcc);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0000);
+    }
+
+    // Pre-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0004, 0xaaaa_bbcc);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   addr      addr
+        // 0b1110_0001_1111_0010_0001_0000_1101_0100 - ldrsb r1,[r2,0x4]!
+        process_instruction(&mut emulator, 0xE1F2_10D4);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xffff_ffcc);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0004);
+    }
+
+    // Post-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0000, 0xaaaa_bbcc);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   addr      addr
+        // 0b1110_0000_1101_0010_0001_0000_1101_0100 - ldrsb r1,[r2],0x4
+        process_instruction(&mut emulator, 0xE0D2_10D4);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xffff_ffcc);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0004);
+    }
+
+    // Offset with a positive byte value
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0004, 0xaaaa_bb7f);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   addr      addr
+        // 0b1110_0001_1101_0010_0001_0000_1101_0100 - ldrsb r1,[r2,0x4]
+        process_instruction(&mut emulator, 0xE1D2_10D4);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0x7f);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0000);
+    }
+}
+
+#[test]
 fn decode_ldrsh() {
     assert_eq!(decode_instruction(0x0_05_000_f_0) as usize, ldrsh as usize);
 }

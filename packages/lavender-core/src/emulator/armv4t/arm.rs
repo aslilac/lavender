@@ -582,7 +582,19 @@ pub mod instructions {
         1
     }
 
-    pub fn ldrsb(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+    /// Load register signed byte
+    pub fn ldrsb(emulator: &mut Emulator, instruction: u32) -> u32 {
+        misc_load_store_instruction_wrapper(
+            emulator,
+            instruction,
+            |emulator, destination_register, address| {
+                let value = (read_byte(emulator, address) as i32) << 24 >> 24;
+                emulator
+                    .cpu
+                    .set_register_value(destination_register, value as u32);
+            },
+        );
+
         1
     }
     pub fn ldrsh(_emulator: &mut Emulator, _instruction: u32) -> u32 {
