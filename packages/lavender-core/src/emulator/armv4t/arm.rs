@@ -129,6 +129,64 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) -> u32 {
     }
 }
 
+mod internal {
+    use crate::emulator::{armv4t::utils::*, cpu::RegisterNames::*, cpu::*, Emulator};
+    use std::convert::TryFrom;
+
+    // Internal functions for reading and writing from/to memory "securely". There is nothing
+    // secure about these because there is no permission checking for memory accesses on the GBA.
+    // It's useful to have separate functions so that it's easier to add debug_assert's or extend
+    // it them for a system with a memory protection unit.
+    pub fn read_byte(emulator: &Emulator, address: u32) -> u8 {
+        emulator.memory.read_byte(address)
+    }
+
+    pub fn read_half_word(emulator: &Emulator, address: u32) -> u16 {
+        emulator.memory.read_half_word(address)
+    }
+
+    pub fn read_word(emulator: &Emulator, address: u32) -> u32 {
+        emulator.memory.read_word(address)
+    }
+
+    pub fn write_byte(emulator: &mut Emulator, address: u32, value: u8) {
+        emulator.memory.write_byte(address, value);
+    }
+
+    pub fn write_half_word(emulator: &mut Emulator, address: u32, value: u16) {
+        emulator.memory.write_half_word(address, value);
+    }
+
+    pub fn write_word(emulator: &mut Emulator, address: u32, value: u32) {
+        emulator.memory.write_word(address, value);
+    }
+
+    pub fn load_store_instruction_wrapper(
+        emulator: &mut Emulator,
+        instruction: u32,
+        operation: fn(&mut Emulator, RegisterNames, u32),
+    ) {
+        let source_or_destination_register =
+            RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
+
+        debug_assert!(
+            !(instruction >> 22 & 0x1 == 0x1
+                && source_or_destination_register == r15),
+            "Loads/stores: result unpredictable if source/destination register == r15 for byte operations");
+
+        let (address, addressing_type) = process_addressing_mode(emulator, instruction);
+
+        debug_assert!(
+            !(addressing_type == AddressingType::PreIndexed
+                && source_or_destination_register
+                    == RegisterNames::try_from(instruction >> 16 & 0xf).unwrap()),
+            "Loads/stores: result unpredictable if Rn == Rd and addressing type is PreIndexed"
+        );
+
+        operation(emulator, source_or_destination_register, address);
+    }
+}
+
 /// A module containing functions which implement all of the 32-bit ARM v4T
 /// instructions.
 pub mod instructions {
