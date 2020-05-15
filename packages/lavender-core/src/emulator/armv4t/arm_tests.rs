@@ -466,6 +466,39 @@ fn decode_ldrt() {
 }
 
 #[test]
+fn behavior_ldrt() {
+    // Post-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0000, 0xeeff_1122);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0100_1011_0010_0001_0000_0000_1010 - ldrt r1,[r2],0xA
+        process_instruction(&mut emulator, 0xE4B2_100A);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xeeff_1122);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_000A);
+    }
+
+    // Non word-aligned address
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0000, 0xaabb_ccdd);
+        emulator.cpu.set_register_value(r2, 0x0300_0001);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0100_1011_0010_0001_0000_0000_0101 - ldrt r1,[r2],0x5
+        process_instruction(&mut emulator, 0xE4B2_1005);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xddaa_bbcc);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0006);
+    }
+}
+
+#[test]
 fn decode_mcr() {
     assert_eq!(decode_instruction(0x0_e0_000_1_0) as usize, mcr as usize);
 }

@@ -613,9 +613,26 @@ pub mod instructions {
 
         1
     }
-    pub fn ldrt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+
+    /// Load register with translation
+    pub fn ldrt(emulator: &mut Emulator, instruction: u32) -> u32 {
+        /*
+        MemoryAccess(B-bit, E-bit)
+        if ConditionPassed(cond) then
+            Rd = Memory[address,4] Rotate_Right (8 * address[1:0])
+        */
+
+        debug_assert_ne!(
+            RegisterNames::try_from(instruction >> 12 & 0xf).unwrap(),
+            r15,
+            "LDRT: result is unpredictable if r15 is specified for destination register"
+        );
+
+        load_store_instruction_wrapper(emulator, instruction, load_register);
+
         1
     }
+
     pub fn mcr(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }
