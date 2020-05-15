@@ -704,7 +704,17 @@ pub mod instructions {
 
         1
     }
-    pub fn strbt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+
+    /// Store register byte with translation
+    pub fn strbt(emulator: &mut Emulator, instruction: u32) -> u32 {
+        /*
+        processor_id = ExecutingProcessor()
+        if ConditionPassed(cond) then
+            Memory[address,1] = Rd[7:0]
+        */
+
+        load_store_instruction_wrapper(emulator, instruction, store_register_byte);
+
         1
     }
 
