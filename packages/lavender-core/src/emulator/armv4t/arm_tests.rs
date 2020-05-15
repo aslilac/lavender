@@ -720,6 +720,24 @@ fn decode_strt() {
 }
 
 #[test]
+fn behavior_strt() {
+    // Post-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.cpu.set_register_value(r1, 0xbbbb_bbbb);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0100_1010_0010_0001_0000_0000_1011 - strt r1,[r2],0xB
+        process_instruction(&mut emulator, 0xE4A2_100B);
+
+        assert_eq!(emulator.memory.read_word(0x0300_0000), 0xbbbb_bbbb);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_000B);
+    }
+}
+
+#[test]
 fn decode_sub() {
     assert_eq!(decode_instruction(0x0_04_000_0_0) as usize, sub as usize);
 }

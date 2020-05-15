@@ -722,9 +722,21 @@ pub mod instructions {
 
         1
     }
-    pub fn strt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+
+    /// Store register with translation
+    pub fn strt(emulator: &mut Emulator, instruction: u32) -> u32 {
+        /*
+        MemoryAccess(B-bit, E-bit)
+        processor_id = ExecutingProcessor()
+        if ConditionPassed(cond) then
+            Memory[address,4] = Rd
+        */
+
+        load_store_instruction_wrapper(emulator, instruction, store_register);
+
         1
     }
+
     pub fn sub(_emulator: &mut Emulator, _instruction: u32) -> u32 {
         1
     }
