@@ -275,6 +275,24 @@ fn decode_ldrbt() {
 }
 
 #[test]
+fn behavior_ldrbt() {
+    // Post-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0000, 0xaabb_ccdd);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0100_1111_0010_0001_0000_0000_0101 - ldrbt r1,[r2],0x5
+        process_instruction(&mut emulator, 0xE4F2_1005);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xdd);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0005);
+    }
+}
+
+#[test]
 fn decode_ldrh() {
     assert_eq!(decode_instruction(0x0_05_000_b_0) as usize, ldrh as usize);
 }

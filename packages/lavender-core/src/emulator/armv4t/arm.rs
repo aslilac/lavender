@@ -562,7 +562,23 @@ pub mod instructions {
 
         1
     }
-    pub fn ldrbt(_emulator: &mut Emulator, _instruction: u32) -> u32 {
+
+    /// Load register byte with translation
+    pub fn ldrbt(emulator: &mut Emulator, instruction: u32) -> u32 {
+        /*
+        if ConditionPassed(cond) then
+            Rd = Memory[address,1]
+            Rn = address
+        */
+
+        debug_assert_ne!(
+            RegisterNames::try_from(instruction >> 12 & 0xf).unwrap(),
+            r15,
+            "LDRBT: result is unpredictable if r15 is specified for destination register"
+        );
+
+        load_store_instruction_wrapper(emulator, instruction, load_register_byte);
+
         1
     }
 
