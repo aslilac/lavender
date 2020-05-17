@@ -179,6 +179,27 @@ mod internal {
         write_byte(emulator, address, (source_register_value & 0xff) as u8);
     }
 
+    pub fn load_register(
+        emulator: &mut Emulator,
+        destination_register: RegisterNames,
+        address: u32,
+    ) {
+        let mut value = read_word(emulator, address & 0xFFFF_FFFC);
+
+        // For ARMv5 and below, if the address is not word aligned, then the loaded value needs to
+        // be rotated right by 8 times the value of the 2 LSB's of the address.
+        let rotate = address & 0x3;
+        if rotate > 0 {
+            value = value.rotate_right(rotate * 8);
+        }
+
+        if destination_register == r15 {
+            emulator.cpu.set_register_value(r15, value & 0xFFFF_FFFC);
+        } else {
+            emulator.cpu.set_register_value(destination_register, value);
+        }
+    }
+
     pub fn load_store_instruction_wrapper(
         emulator: &mut Emulator,
         instruction: u32,
@@ -472,21 +493,19 @@ pub mod instructions {
         if ConditionPassed(cond) then
             if (CP15_reg1_Ubit == 0) then
                 data = Memory[address,4] Rotate_Right (8 * address[1:0])
-            else /* CP15_reg_Ubit == 1 */ data = Memory[address,4]
-        if (Rd is R15) then
-        if (ARMv5 or above) then
-        PC = data AND 0xFFFFFFFE
-        T Bit = data[0] else
-        PC = data AND 0xFFFFFFFC Rd = data
+            else /* CP15_reg_Ubit == 1 */
+                data = Memory[address,4]
+            if (Rd is R15) then
+                if (ARMv5 or above) then
+                    PC = data AND 0xFFFFFFFE
+                    T Bit = data[0]
+                else
+                    PC = data AND 0xFFFFFFFC
+            else
+                Rd = data
         */
 
-        let operand_register = RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
-        let destination_register = RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
-        let addressing_mode = process_addressing_mode(emulator, instruction);
-
-        let value = emulator.memory.read_word(addressing_mode);
-
-        emulator.cpu.set_register_value(destination_register, value);
+        load_store_instruction_wrapper(emulator, instruction, load_register);
 
         5
     }

@@ -141,6 +141,83 @@ fn decode_ldr() {
 }
 
 #[test]
+fn behavior_ldr() {
+    // Offset
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0004, 0xaabb_ccdd);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0101_1001_0010_0001_0000_0000_0100 - ldr r1,[r2,0x4]
+        process_instruction(&mut emulator, 0xE592_1004);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xaabb_ccdd);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0000);
+    }
+
+    // Post-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0000, 0xeeff_1122);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0100_1001_0010_0001_0000_0000_1010 - ldr r1,[r2],0xA
+        process_instruction(&mut emulator, 0xE492_100A);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xeeff_1122);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_000A);
+    }
+
+    // Pre-indexed
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0010, 0x3344_5566);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0101_1011_0010_0001_0000_0001_0000 - ldr r1,[r2,0x10]!
+        process_instruction(&mut emulator, 0xE5B2_1010);
+
+        assert_eq!(emulator.memory.read_word(0x0300_0010), 0x3344_5566);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0010);
+    }
+
+    // Non word-aligned address
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0004, 0xaabb_ccdd);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0101_1001_0010_0001_0000_0000_0101 - ldr r1,[r2,0x5]
+        process_instruction(&mut emulator, 0xE592_1005);
+
+        assert_eq!(emulator.cpu.get_register_value(r1), 0xddaa_bbcc);
+        assert_eq!(emulator.cpu.get_register_value(r2), 0x0300_0000);
+    }
+
+    // Rd == r15
+    {
+        let mut emulator = Emulator::dummy();
+
+        emulator.memory.write_word(0x0300_0014, 0x0400_0083);
+        emulator.cpu.set_register_value(r2, 0x0300_0000);
+
+        //   cond    P UBWL Rn   Rd   offset12
+        // 0b1110_0101_1001_0010_1111_0000_0001_0100 - ldr r15,[r2,0x14]
+        process_instruction(&mut emulator, 0xE592_F014);
+
+        assert_eq!(emulator.cpu.get_register_value(r15), 0x0400_0080);
+    }
+}
+
+#[test]
 fn decode_ldrb() {
     assert_eq!(decode_instruction(0x0_45_000_0_0) as usize, ldrb as usize);
 }
