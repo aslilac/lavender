@@ -260,19 +260,20 @@ export class Controller {
 	}
 }
 
-// We have to import both of these because index_bg doesn't correctly
-// allow us to pass values bac and forth even though it does expose
-// the functions. Idk if it's a bug or intended, but this way works.
+// We have to import both of these because index doesn't export memory,
+// but index_bg does. index exports the functions, but index_bg doesn't.
+// The any annotation is a sad way of avoiding type errors while also importing
+// both of these concurrently.
 Promise.all([
 	import("../target/wasm-pack"),
 	import("../target/wasm-pack/index_bg"),
-]).then(([emulator, { memory }]) => {
+]).then(async ([emulator, { memory }]: any) => {
 	// Load the rom into the emulator
-	// fetch( '/game/pokemon_emerald.gba' )
-	fetch("/resources/rom_tests/bin/first.gba")
-		.then((response) => response.arrayBuffer())
-		.then((buffer) => {
-			emulator.init_emulation(new Uint8Array(buffer));
-			new Controller(emulator, memory).enableDrawing();
-		});
+	// fetch("/game/pokemon_emerald.gba")
+	const response = await fetch("/resources/rom_tests/bin/first.gba");
+	const buffer = await response.arrayBuffer();
+	emulator.init_emulation(new Uint8Array(buffer));
+
+	// Create a controller to interact with the emulation
+	new Controller(emulator, memory).enableDrawing();
 });

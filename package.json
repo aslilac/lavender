@@ -9,6 +9,10 @@
 		"react": "^16.11.0",
 		"react-dom": "^16.11.0"
 	},
+	"browserslist": [
+		"chrome >= 80",
+		"safari >= 13"
+	],
 	"devDependencies": {
 		"@babel/core": "^7.9.0",
 		"@babel/preset-env": "^7.9.0",

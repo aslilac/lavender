@@ -1,9 +1,14 @@
+"use strict";
+
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
 const { DefinePlugin } = require("webpack");
 const WebpackBar = require("webpackbar");
 
+/**
+ * @type {import("webpack").ConfigurationFactory}
+ */
 module.exports = (env, argv) => ({
 	// ------ webpack ------
 	entry: "./client/client.tsx",
@@ -13,6 +18,10 @@ module.exports = (env, argv) => ({
 
 	resolve: {
 		extensions: [".js", ".ts", ".tsx", ".wasm"],
+
+		alias: {
+			"@lavender/core": path.join(__dirname, "target/wasm-pack/index.js"),
+		},
 	},
 
 	output: {
