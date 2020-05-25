@@ -33,7 +33,6 @@
 	"scripts": {
 		"build": "webpack --mode=production",
 		"dev": "webpack-dev-server",
-		"fmt": "prettier --ignore-path .gitignore --write . && cargo fmt",
 		"release": "webpack-dev-server --mode=production",
 		"test": "ava"
 	}

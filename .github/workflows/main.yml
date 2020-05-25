@@ -12,7 +12,7 @@ jobs:
 
         strategy:
             matrix:
-                node-version: [10.x, 12.x]
+                node-version: [12.x, 14.x]
             fail-fast: false
 
         steps:
@@ -35,8 +35,8 @@ jobs:
 
             - run: yarn prettier --ignore-path .gitignore --check .
 
-            - run: yarn build
-            - run: yarn ava
+            - run: yarn workspace @lavender/app build
+            - run: yarn workspace @lavender/app test
 
     build-rs:
         runs-on: ubuntu-latest
