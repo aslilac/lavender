@@ -4,6 +4,9 @@
 //! of WebAssembly. All of the actual rendering and sound generation is done in
 //! JavaScript. Only the hardware itself is emulated inside of Rust.
 
+// This should be removed when things are much closer to finalized
+#![allow(dead_code, unused_imports, unused_variables)]
+
 /// The core logic of the emulator is within this module.
 pub mod emulator;
 

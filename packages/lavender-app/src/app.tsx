@@ -1,20 +1,13 @@
-import * as emulator from "@lavender/core";
-import React from "react";
-import ReactDOM from "react-dom";
-
-import { Overlay } from "./overlay";
-
-export type Emulator = typeof emulator;
-
 declare global {
 	const webpack_mode: string;
 }
 
-type ScaleOptions = {
-	resizeWidth: number;
-	resizeHeight: number;
-	resizeQuality: "pixelated";
-};
+import * as emulator from "@lavender/core";
+export type Emulator = typeof emulator;
+import React from "react";
+import ReactDOM from "react-dom";
+
+import { Overlay } from "./overlay";
 
 type Memory = {
 	io: Uint8Array;
@@ -30,7 +23,6 @@ export class Controller {
 
 	canvas: HTMLCanvasElement;
 	context: CanvasRenderingContext2D;
-	scaleOptions: ScaleOptions;
 	frame: number;
 	shouldEmulate: boolean;
 
@@ -68,6 +60,9 @@ export class Controller {
 		this.context = this.canvas.getContext("2d")!;
 		this.frame = 0;
 		this.shouldEmulate = false;
+
+		// Hide the overlay by default in production, show it by default in dev
+		this.showOverlay = webpack_mode !== "production";
 		this.emulationTime = 0;
 		this.frameEnd = 0;
 		this.renderTime = 0;
@@ -95,22 +90,12 @@ export class Controller {
 		const scaleX = width / 240;
 		const scaleY = height / 160;
 
-		this.scaleOptions = {
-			resizeWidth: box.width * dpr,
-			resizeHeight: box.height * dpr,
-			resizeQuality: "pixelated",
-		};
-
 		this.canvas.width = width;
 		this.canvas.height = height;
 		this.context.scale(scaleX, scaleY);
 	}
 
 	enableDrawing() {
-		// Hide the overlay by default in production, show it by default
-		// in dev
-		this.showOverlay = webpack_mode !== "production";
-
 		// Allow spacebar to begin emulation
 		window.addEventListener("keydown", (event) => {
 			if (event.code === "Space") {
@@ -129,7 +114,6 @@ export class Controller {
 		// necessary so that the call is put on the event loop rather than executing
 		// immediately. If it executes immediately it will attempt to call step_frame
 		// while the mutex is still locked from enable_drawing.
-		// this.fillScreenWithRandomStuffForTesting();
 		requestAnimationFrame(() => this.render());
 
 		return this;
@@ -207,52 +191,6 @@ export class Controller {
 		this.updateOverlay();
 	}
 
-	// #[allow(dead_Code)]
-	async experimental_render() {
-		const io = this.memory.io;
-		const vram = this.memory.vram;
-
-		const displayControl = io[0] + (io[1] << 8);
-		const displayMode = displayControl & 7;
-
-		// console.log(vram);
-
-		const translation = new Uint8ClampedArray(240 * 160 * 4);
-
-		if (displayMode === 3) {
-			for (let i = 0; i < 240 * 160; i++) {
-				const rgb15 = vram[i * 2] + (vram[i * 2 + 1] << 8);
-
-				translation[i * 4] = (rgb15 & 0x001f) * 8;
-				translation[i * 4 + 1] = ((rgb15 >> 5) & 0x001f) * 8;
-				translation[i * 4 + 2] = ((rgb15 >> 10) & 0x001f) * 8;
-				translation[i * 4 + 3] = 255;
-			}
-		}
-
-		// console.log(translation);
-
-		const imageData = new ImageData(translation, 240, 160);
-		// console.log(imageData);
-
-		type CorrectedSignature = (
-			imageData: ImageData,
-			scaleOptions?: ScaleOptions,
-		) => Promise<ImageBitmap>;
-
-		console.time("createImageBitmap");
-		const image = await (createImageBitmap as CorrectedSignature)(
-			imageData,
-			this.scaleOptions,
-		);
-		console.timeEnd("createImageBitmap");
-
-		// console.log("here we go", image);
-		this.context.drawImage(image, 0, 0);
-
-		this.updateOverlay();
-	}
-
 	updateOverlay() {
 		ReactDOM.render(
 			<>
@@ -265,14 +203,19 @@ export class Controller {
 	}
 }
 
+// Promise.all doesn't really maintain typing properly
+type CoreImports = [Emulator, { memory: WebAssembly.Memory }];
+
 // We have to import both of these because index doesn't export memory,
 // but index_bg does. index exports the functions, but index_bg doesn't.
 // The any annotation is a sad way of avoiding type errors while also importing
 // both of these concurrently.
-Promise.all([
-	import("@lavender/core"),
-	import("@lavender/core/target/index_bg.wasm"),
-]).then(async ([emulator, { memory }]: any) => {
+const main = async () => {
+	const [emulator, { memory }]: CoreImports = await Promise.all([
+		import("@lavender/core"),
+		import("@lavender/core/target/index_bg.wasm"),
+	]);
+
 	// Load the rom into the emulator
 	// fetch("/game/pokemon_emerald.gba")
 	const response = await fetch("/rom_tests/bin/first.gba");
@@ -281,4 +224,6 @@ Promise.all([
 
 	// Create a controller to interact with the emulation
 	new Controller(emulator, memory).enableDrawing();
-});
+};
+
+main();
