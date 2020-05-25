@@ -1,19 +1,6 @@
-[package]
-name = "lavender"
-version = "0.0.1"
-authors = ["McKayla Washburn"]
-description = "A Gameboy Advanced emulator written in Rust"
-license = "MIT"
-edition = "2018"
+[workspace]
 
-[lib]
-crate-type = ["cdylib"]
-
-[dependencies]
-console_error_panic_hook = "0.1.6"
-lazy_static = "1.4.0"
-num_enum = "0.4.1"
-wasm-bindgen = "0.2.49"
-
-[dev-dependencies]
-mdbook = "0.3.1"
+members = [
+	# "packages/lavender-book",
+	"packages/lavender-core",
+]

@@ -2,8 +2,4 @@
 title = "The Ultimate Game Boy Advance Reference"
 author = "McKayla Washburn"
 description = "Detailed examples of how to build a Game Boy Advance emulator, with source code and examples."
-src = "book"
-lang = "en-US"
-
-[build]
-build-dir = "target/book"
+slang = "en-US"

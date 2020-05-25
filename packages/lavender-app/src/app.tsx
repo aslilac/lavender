@@ -1,8 +1,8 @@
+import * as emulator from "@lavender/core";
 import React from "react";
 import ReactDOM from "react-dom";
 
-import * as emulator from "../target/wasm-pack";
-import Overlay from "./overlay";
+import { Overlay } from "./overlay";
 
 type Emulator = typeof emulator;
 
@@ -64,8 +64,8 @@ export class Controller {
 			),
 		};
 
-		this.canvas = document.querySelector("#display");
-		this.context = this.canvas.getContext("2d");
+		this.canvas = document.querySelector<HTMLCanvasElement>("#display")!;
+		this.context = this.canvas.getContext("2d")!;
 		this.frame = 0;
 		this.shouldEmulate = false;
 		this.emulationTime = 0;
@@ -77,6 +77,7 @@ export class Controller {
 		this.context.fillRect(0, 0, 240, 160);
 	}
 
+	// #[allow(dead_code)]
 	fillScreenWithRandomStuffForTesting() {
 		const colors = [0x03ff, 0x7c16, 0x4fe3];
 		for (let i = 0; i < 240 * 160; i++) {
@@ -102,7 +103,7 @@ export class Controller {
 
 		this.canvas.width = width;
 		this.canvas.height = height;
-		// this.context.scale(scaleX, scaleY);
+		this.context.scale(scaleX, scaleY);
 	}
 
 	enableDrawing() {
@@ -128,8 +129,8 @@ export class Controller {
 		// necessary so that the call is put on the event loop rather than executing
 		// immediately. If it executes immediately it will attempt to call step_frame
 		// while the mutex is still locked from enable_drawing.
-		this.fillScreenWithRandomStuffForTesting();
-		requestAnimationFrame(() => this.experimental_render());
+		// this.fillScreenWithRandomStuffForTesting();
+		requestAnimationFrame(() => this.render());
 
 		return this;
 	}
@@ -146,12 +147,12 @@ export class Controller {
 		this.emulator.step_frames(1);
 		this.emulationTime = Date.now() - emulationBeginning;
 
-		if (this.frame % 30 === 0) {
-			this.fillScreenWithRandomStuffForTesting();
-		}
+		// if (this.frame % 30 === 0) {
+		// 	this.fillScreenWithRandomStuffForTesting();
+		// }
 
 		const renderBeginning = Date.now();
-		this.experimental_render();
+		this.render();
 		this.frameEnd = Date.now();
 		this.renderTime = this.frameEnd - renderBeginning;
 		this.frame++;
@@ -206,7 +207,8 @@ export class Controller {
 		this.updateOverlay();
 	}
 
-	experimental_render() {
+	// #[allow(dead_Code)]
+	async experimental_render() {
 		const io = this.memory.io;
 		const vram = this.memory.vram;
 
@@ -237,24 +239,27 @@ export class Controller {
 			imageData: ImageData,
 			scaleOptions?: ScaleOptions,
 		) => Promise<ImageBitmap>;
+
 		console.time("createImageBitmap");
-		(createImageBitmap as CorrectedSignature)(
+		const image = await (createImageBitmap as CorrectedSignature)(
 			imageData,
 			this.scaleOptions,
-		).then((image) => {
-			console.timeEnd("createImageBitmap");
-			// console.log("here we go", image);
-			this.context.drawImage(image, 0, 0);
-		});
+		);
+		console.timeEnd("createImageBitmap");
+
+		// console.log("here we go", image);
+		this.context.drawImage(image, 0, 0);
 
 		this.updateOverlay();
 	}
 
 	updateOverlay() {
 		ReactDOM.render(
-			this.showOverlay && (
-				<Overlay controller={this} emulator={this.emulator} />
-			),
+			<>
+				{this.showOverlay && (
+					<Overlay controller={this} emulator={this.emulator} />
+				)}
+			</>,
 			document.querySelector("#overlay-container"),
 		);
 	}
@@ -265,12 +270,12 @@ export class Controller {
 // The any annotation is a sad way of avoiding type errors while also importing
 // both of these concurrently.
 Promise.all([
-	import("../target/wasm-pack"),
-	import("../target/wasm-pack/index_bg"),
+	import("@lavender/core"),
+	import("@lavender/core/target/index_bg.wasm"),
 ]).then(async ([emulator, { memory }]: any) => {
 	// Load the rom into the emulator
 	// fetch("/game/pokemon_emerald.gba")
-	const response = await fetch("/resources/rom_tests/bin/first.gba");
+	const response = await fetch("/rom_tests/bin/first.gba");
 	const buffer = await response.arrayBuffer();
 	emulator.init_emulation(new Uint8Array(buffer));
 

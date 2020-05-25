@@ -79,7 +79,7 @@ starting either script.
 
 ## Progress
 
-### ARM v4T Emulation
+### ARM v4T
 
 -   [ ] 32-bit ARM instructions
     -   [x] Decoding
@@ -90,25 +90,30 @@ starting either script.
     -   [ ] Disassembly
     -   [ ] Behavior
 
-### Graphics Emulation
+### Hardware
+
+-   [ ] DMA
+-   [ ] HBlank/VBlank/FBlank
+-   [ ] Input (buttons)
+
+### Graphics
 
 -   [ ] Objects
     -   [ ] Mode 0 (all 4 layers, no rotate or scale)
     -   [ ] Mode 1 (layers [0..2], layer 2 rotate and scale)
     -   [ ] Mode 2 (layers [2..3], both rotate and scale)
 -   [ ] Bitmaps
+
     -   [x] Mode 3 (240x160, full color, unbuffered)
     -   [ ] Mode 4 (240x160, palette color, buffered)
     -   [ ] Mode 5 (160x128, full color, buffered)
 
-### Audio Emulation
+-   [x] Stage 1: Canvas2D/BitmapRenderer
+-   [ ] Stage 2: WebGL
+
+### Audio
 
 -   [ ] Channels 1 & 2 (square wave)
 -   [ ] Channel 3 (sampled)
 -   [ ] Channel 4 (noise)
 -   [ ] Channel A & B (direct sound)
-
-### Miscellaneous
-
--   [ ] DMA
--   [ ] WebGL

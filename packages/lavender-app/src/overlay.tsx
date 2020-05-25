@@ -17,12 +17,12 @@ const drawingModes = [
 const color = (actual: number, yellow: number, red: number): string =>
 	actual > red ? "--red" : actual < yellow ? "--green" : "--yellow";
 
-interface OverlayProps {
+type OverlayProps = {
 	controller: Controller;
 	emulator: Emulator;
-}
+};
 
-export default function Overlay(props: OverlayProps) {
+export const Overlay = (props: OverlayProps) => {
 	const { controller, emulator } = props;
 	const { emulationTime, renderTime } = controller;
 	const emulationTimeColor = `var(${color(emulationTime, 7, 11)})`;
@@ -109,7 +109,7 @@ export default function Overlay(props: OverlayProps) {
 			</p>
 		</section>
 	);
-}
+};
 
 function KeyObserver(props: React.ComponentProps<"code">) {
 	const [keyName, setKeyName] = useState("...");

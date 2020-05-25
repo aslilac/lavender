@@ -1,0 +1,40 @@
+{
+	"name": "@lavender/app",
+	"version": "0.0.1",
+	"author": "McKayla Washburn",
+	"description": "A Gameboy Advanced emulator written in Rust",
+	"license": "MIT",
+	"repository": "https://github.com/partheseas/lavender",
+	"dependencies": {
+		"react": "^16.11.0",
+		"react-dom": "^16.11.0"
+	},
+	"browserslist": [
+		"chrome >= 80",
+		"safari >= 13"
+	],
+	"devDependencies": {
+		"@babel/core": "^7.9.0",
+		"@babel/preset-env": "^7.9.0",
+		"@babel/preset-react": "^7.9.0",
+		"@babel/preset-typescript": "^7.9.0",
+		"@types/react": "^16.9.11",
+		"@types/react-dom": "^16.9.3",
+		"@wasm-tool/wasm-pack-plugin": "^1.1.0",
+		"ava": "^3.5.0",
+		"babel-loader": "^8.0.6",
+		"html-webpack-plugin": "^4.0.4",
+		"wasm-pack": "^0.9.1",
+		"webpack": "^4.39.2",
+		"webpack-cli": "^3.3.6",
+		"webpack-dev-server": "^3.8.0",
+		"webpackbar": "^4.0.0"
+	},
+	"scripts": {
+		"build": "webpack --mode=production",
+		"dev": "webpack-dev-server",
+		"fmt": "prettier --ignore-path .gitignore --write . && cargo fmt",
+		"release": "webpack-dev-server --mode=production",
+		"test": "ava"
+	}
+}

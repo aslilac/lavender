@@ -3,29 +3,25 @@
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
-const { DefinePlugin } = require("webpack");
+const webpack = require("webpack");
 const WebpackBar = require("webpackbar");
 
 /**
- * @type {import("webpack").ConfigurationFactory}
+ * @type {webpack.ConfigurationFactory}
  */
 module.exports = (env, argv) => ({
 	// ------ webpack ------
-	entry: "./client/client.tsx",
+	entry: "./src/app.tsx",
 	mode: "development",
 	devtool: "source-map",
 	stats: "minimal",
 
 	resolve: {
 		extensions: [".js", ".ts", ".tsx", ".wasm"],
-
-		alias: {
-			"@lavender/core": path.join(__dirname, "target/wasm-pack/index.js"),
-		},
 	},
 
 	output: {
-		path: path.resolve(__dirname, "target/webpack"),
+		path: path.resolve(__dirname, "target"),
 		filename: "client.js",
 	},
 
@@ -35,6 +31,7 @@ module.exports = (env, argv) => ({
 
 	devServer: {
 		compress: true,
+		contentBase: path.join(__dirname, "public"),
 		host: "::",
 		port: 1234,
 	},
@@ -47,18 +44,18 @@ module.exports = (env, argv) => ({
 
 		// ------ Creates our index.html file ------
 		new HtmlWebpackPlugin({
-			template: "client/index.html",
+			template: "src/index.html",
 		}),
 
 		// ------ Define variables at build time ------
-		new DefinePlugin({
+		new webpack.DefinePlugin({
 			webpack_mode: JSON.stringify(argv.mode),
 		}),
 
 		// ------ wasm-pack ------
 		new WasmPackPlugin({
-			crateDirectory: path.resolve(__dirname, "."),
-			outDir: "target/wasm-pack",
+			crateDirectory: path.join(__dirname, "../lavender-core"),
+			outDir: "target",
 		}),
 	],
 

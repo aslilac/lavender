@@ -4,6 +4,14 @@
 # Dependencies
 node_modules
 
-# Ignore all of our various build output
-# (Cargo, wasm-pack, mdbook)
+# Build artifacts
+.cache
+.parcel-cache
+book
+dist
+public
 target
+
+# Vercel
+.now
+.vercel
