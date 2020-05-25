@@ -23,10 +23,6 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
 
-            # Hacky and lame, but WasmPackPlugin won't create
-            # directories recursively, so we have to do it.
-            - run: mkdir target
-
             - run: node -v
             - run: yarn -v
             - run: cargo --version
