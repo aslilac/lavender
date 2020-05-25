@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 
 import { Overlay } from "./overlay";
 
-type Emulator = typeof emulator;
+export type Emulator = typeof emulator;
 
 declare global {
 	const webpack_mode: string;

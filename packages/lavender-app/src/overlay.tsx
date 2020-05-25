@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import * as emulator from "../target/wasm-pack";
-import { Controller } from "./client";
-
-type Emulator = typeof emulator;
+import type { Controller, Emulator } from "./app";
 
 const drawingModes = [
 	"[Object]\n    all 4 layers, no rotate or scale",
@@ -14,8 +11,8 @@ const drawingModes = [
 	"[Bitmap]\n    160x128, full color, buffered",
 ];
 
-const color = (actual: number, yellow: number, red: number): string =>
-	actual > red ? "--red" : actual < yellow ? "--green" : "--yellow";
+const color = (x: number, yellow: number, red: number): string =>
+	x > red ? "var(--red)" : x > yellow ? "var(--yellow)" : "var(--green)";
 
 type OverlayProps = {
 	controller: Controller;
@@ -25,8 +22,8 @@ type OverlayProps = {
 export const Overlay = (props: OverlayProps) => {
 	const { controller, emulator } = props;
 	const { emulationTime, renderTime } = controller;
-	const emulationTimeColor = `var(${color(emulationTime, 7, 11)})`;
-	const renderTimeColor = `var(${color(renderTime, 3, 5)})`;
+	const emulationTimeColor = color(emulationTime, 7, 11);
+	const renderTimeColor = color(renderTime, 3, 5);
 	const displayMode = controller.memory.io[0] & 7;
 
 	let step = () => {
@@ -37,7 +34,7 @@ export const Overlay = (props: OverlayProps) => {
 		}
 
 		try {
-			controller.experimental_render();
+			controller.render();
 		} catch (e) {
 			console.error("Something went wrong in the render step", e);
 		}
@@ -64,14 +61,12 @@ export const Overlay = (props: OverlayProps) => {
 
 			<h6>Registers</h6>
 			<div id="registers">
-				{Array.from<number>(emulator.read_registers()).map(
-					(value, id) => (
-						<span key={id} className="internal register">
-							{value.toString(16).padStart(8, "0")}
-							<sub className="register-label">r{id}</sub>
-						</span>
-					),
-				)}
+				{Array.from(emulator.read_registers()).map((value, id) => (
+					<span key={id} className="internal register">
+						{value.toString(16).padStart(8, "0")}
+						<sub className="register-label">r{id}</sub>
+					</span>
+				))}
 				<span className="internal register">
 					{emulator.read_cpsr().toString(16).padStart(8, "0")}
 					<sub className="register-label">cpsr</sub>
@@ -111,7 +106,7 @@ export const Overlay = (props: OverlayProps) => {
 	);
 };
 
-function KeyObserver(props: React.ComponentProps<"code">) {
+const KeyObserver = (props: React.ComponentProps<"code">) => {
 	const [keyName, setKeyName] = useState("...");
 
 	useEffect(() => {
@@ -121,4 +116,4 @@ function KeyObserver(props: React.ComponentProps<"code">) {
 	});
 
 	return <code {...props}>{keyName}</code>;
-}
+};
