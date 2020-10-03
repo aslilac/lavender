@@ -208,7 +208,7 @@ type CoreImports = [Emulator, { memory: WebAssembly.Memory }];
 const main = async () => {
 	const [emulator, { memory }]: CoreImports = await Promise.all([
 		import("@lavender/core"),
-		 // @ts-ignore
+		// @ts-ignore
 		import("@lavender/core/target/index_bg.wasm"),
 	]);
 
