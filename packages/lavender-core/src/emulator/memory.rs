@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 pub const BIOS_SIZE: usize = 16 * 1024;
 pub const BIOS_START: usize = 0x0000_0000;
 pub const BIOS_END: usize = BIOS_START + BIOS_SIZE - 1;
@@ -80,8 +82,8 @@ impl Memory {
         };
 
         // Copy the BIOS into memory
-        for each in 0..BIOS.len() {
-            memory.bios[each] = BIOS[each];
+        for (index, byte) in BIOS.iter().enumerate() {
+            memory.bios[index] = *byte;
         }
 
         memory
@@ -101,36 +103,69 @@ impl Memory {
         }
     }
 
+    pub fn get_mapped_segment_and_real_offset(&self, address: u32) -> Option<(&Vec<u8>, usize)> {
+        let i = address as usize;
+
+        match i {
+            BIOS_START..=BIOS_END => Some((&self.bios, i)),
+            EXT_START..=EXT_END => Some((&self.ext, i - EXT_START)),
+            RAM_START..=RAM_END => Some((&self.ram, i - RAM_START)),
+            IO_START..=IO_END => Some((&self.io, i - IO_START)),
+            PALETTE_START..=PALETTE_END => Some((&self.palette, i - PALETTE_START)),
+            VRAM_START..=VRAM_END => Some((&self.vram, i - VRAM_START)),
+            OBJECT_ATTRIBUTE_START..=OBJECT_ATTRIBUTE_END => {
+                Some((&self.object, i - OBJECT_ATTRIBUTE_START))
+            }
+            ROM_START..=ROM_END => Some((&self.rom, i - ROM_START)),
+            ROM_WAIT1_START..=ROM_WAIT1_END => Some((&self.rom, i - ROM_WAIT1_START)),
+            ROM_WAIT2_START..=ROM_WAIT2_END => Some((&self.rom, i - ROM_WAIT2_START)),
+            SAVE_START..=SAVE_END => Some((&self.save, i - SAVE_START)),
+            _ => None,
+        }
+    }
+
     pub fn read_word(&self, address: u32) -> u32 {
         // assert_eq!(address % 4, 0);
 
-        let mut accumulator = u32::from(self.read_byte(address));
-        for each in 1..4 {
-            accumulator += u32::from(self.read_byte(address + each)) << each * 8;
+        if let Some((mem, offset)) = self.get_mapped_segment_and_real_offset(address) {
+            u32::from_le_bytes(
+                mem[offset..offset + 4]
+                    .try_into()
+                    .expect("4 bytes should properly form a u32"),
+            )
+        } else {
+            0
         }
-
-        accumulator
     }
 
     pub fn write_word(&mut self, address: u32, value: u32) {
         assert_eq!(address % 4, 0);
 
-        for each in 0..4 {
-            self.write_byte(address + each, ((value >> each * 8) & 0xff) as u8);
+        for (index, each) in value.to_le_bytes().iter().enumerate() {
+            self.write_byte(address + index as u32, *each);
         }
     }
 
     pub fn read_half_word(&self, address: u32) -> u16 {
         assert_eq!(address % 2, 0);
 
-        u16::from(self.read_byte(address)) + (u16::from(self.read_byte(address + 1)) << 8)
+        if let Some((mem, offset)) = self.get_mapped_segment_and_real_offset(address) {
+            u16::from_le_bytes(
+                mem[offset..offset + 2]
+                    .try_into()
+                    .expect("2 bytes should properly form a u16"),
+            )
+        } else {
+            0
+        }
     }
 
     pub fn write_half_word(&mut self, address: u32, value: u16) {
         assert_eq!(address % 2, 0);
 
-        self.write_byte(address, (value & 0xff) as u8);
-        self.write_byte(address + 1, (value >> 8 & 0xff) as u8);
+        for (index, each) in value.to_le_bytes().iter().enumerate() {
+            self.write_byte(address + index as u32, *each);
+        }
     }
 
     pub fn read_byte(&self, address: u32) -> u8 {
@@ -176,7 +211,7 @@ impl Memory {
     }
 }
 
-pub const BIOS: [u8; 548] = [
+pub static BIOS: [u8; 548] = [
     0x06, 0x00, 0x00, 0xea, 0xfe, 0xff, 0xff, 0xea, 0x0b, 0x00, 0x00, 0xea, 0xfe, 0xff, 0xff, 0xea,
     0xfe, 0xff, 0xff, 0xea, 0x00, 0x00, 0xa0, 0xe1, 0x2c, 0x00, 0x00, 0xea, 0xfe, 0xff, 0xff, 0xea,
     0x02, 0x03, 0xa0, 0xe3, 0x03, 0x10, 0xd0, 0xe5, 0xea, 0x00, 0x51, 0xe3, 0xec, 0x01, 0x9f, 0x15,

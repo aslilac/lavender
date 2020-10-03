@@ -8,6 +8,7 @@
 	},
 	"scripts": {
 		"dev": "yarn workspace @lavender/app dev",
+		"release": "yarn workspace @lavender/app release",
 		"fmt": "prettier --ignore-path .gitignore --write . && cargo fmt",
 		"postinstall": "node ./bin/hello",
 		"test": "yarn workspace @lavender/app test && cargo test"

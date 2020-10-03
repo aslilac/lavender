@@ -1,13 +1,9 @@
-declare global {
-	const webpack_mode: string;
-}
-
-import * as emulator from "@lavender/core";
-export type Emulator = typeof emulator;
 import React from "react";
 import ReactDOM from "react-dom";
 
 import { Overlay } from "./overlay";
+
+export type Emulator = typeof import("@lavender/core");
 
 type Memory = {
 	io: Uint8Array;

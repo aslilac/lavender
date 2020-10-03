@@ -1,11 +1,14 @@
 {
 	"compilerOptions": {
+		"composite": true,
 		"esModuleInterop": true,
 		"module": "esnext",
 		"moduleResolution": "node",
 		"lib": ["dom", "esnext"],
 		"jsx": "preserve",
+		"sourceMap": true,
 		"strict": true,
 		"target": "esnext"
-	}
+	},
+	"include": ["@types/**/*.d.ts", "src/**/*"]
 }
