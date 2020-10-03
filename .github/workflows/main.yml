@@ -2,9 +2,9 @@ name: main
 
 on:
     push:
-        branches: [master]
+        branches: [main]
     pull_request:
-        branches: [master]
+        branches: [main]
 
 jobs:
     build-js:
@@ -25,7 +25,7 @@ jobs:
 
             - run: node -v
             - run: yarn -v
-            - run: cargo --version
+            - run: cargo -V
 
             - run: yarn
 
@@ -47,8 +47,8 @@ jobs:
 
             - run: rustup default ${{ matrix.rust-version }}
 
-            - run: rustc --version
-            - run: cargo --version
+            - run: rustc -V
+            - run: cargo -V
 
             - run: rustup component add rustfmt
               if: matrix.rust-version == 'stable'
