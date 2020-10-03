@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { Controller, Emulator } from "./app";
 
@@ -106,14 +106,14 @@ export const Overlay = (props: OverlayProps) => {
 	);
 };
 
-const KeyObserver = (props: React.ComponentProps<"code">) => {
+const KeyObserver = (props: React.HTMLAttributes<HTMLElement>) => {
 	const [keyName, setKeyName] = useState("...");
 
 	useEffect(() => {
-		let update = (key: KeyboardEvent) => setKeyName(key.code);
+		const update = (key: KeyboardEvent) => setKeyName(key.code);
 		window.addEventListener("keydown", update);
 		return () => window.removeEventListener("keydown", update);
-	});
+	}, [setKeyName]);
 
 	return <code {...props}>{keyName}</code>;
 };

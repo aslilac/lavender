@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom";
 
 import { Overlay } from "./overlay";
@@ -209,6 +208,7 @@ type CoreImports = [Emulator, { memory: WebAssembly.Memory }];
 const main = async () => {
 	const [emulator, { memory }]: CoreImports = await Promise.all([
 		import("@lavender/core"),
+		 // @ts-ignore
 		import("@lavender/core/target/index_bg.wasm"),
 	]);
 
