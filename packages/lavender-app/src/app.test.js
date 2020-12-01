@@ -1,13 +1,11 @@
-const test = require("ava");
-
-test("hello friend", (t) => {
-	t.true(true);
+test("hello friend", () => {
+	expect(true).toBe(true);
 });
 
-test("test placeholders", (t) => {
-	t.true(true);
+test("test placeholders", () => {
+	expect(true).toBe(true);
 });
 
-test("so robust, wow", (t) => {
-	t.true(true);
+test("so robust, wow", () => {
+	expect(true).toBe(true);
 });

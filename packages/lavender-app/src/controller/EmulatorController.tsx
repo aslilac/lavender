@@ -1,20 +1,10 @@
 import ReactDOM from "react-dom";
 
-import { Overlay } from "./overlay";
-
-export type Emulator = typeof import("@lavender/core");
-
-type Memory = {
-	io: Uint8Array;
-	palette: Uint8Array;
-	vram: Uint8Array;
-	object: Uint8Array;
-};
+import { Overlay } from "../components/Overlay";
+import { createMemoryView, MemoryView } from "./util";
 
 export class Controller {
-	emulator: Emulator;
-	rawMemory: WebAssembly.Memory;
-	memory: Memory;
+	memory: MemoryView;
 
 	canvas: HTMLCanvasElement;
 	context: CanvasRenderingContext2D;
@@ -27,29 +17,11 @@ export class Controller {
 	renderTime: number;
 
 	// This shouldn't be an any, because we do know the type
-	constructor(emulator: Emulator, rawMemory: WebAssembly.Memory) {
-		this.emulator = emulator;
-		this.rawMemory = rawMemory;
-
-		const ioAddress = emulator.get_io_address();
-		const paletteAddress = emulator.get_palette_address();
-		const vramAddress = emulator.get_vram_address();
-		const objectAddress = emulator.get_object_address();
-
-		this.memory = {
-			io: new Uint8Array(
-				rawMemory.buffer.slice(ioAddress, ioAddress + 1024),
-			),
-			palette: new Uint8Array(
-				rawMemory.buffer.slice(paletteAddress, paletteAddress + 1024),
-			),
-			vram: new Uint8Array(
-				rawMemory.buffer.slice(vramAddress, vramAddress + 96 * 1024),
-			),
-			object: new Uint8Array(
-				rawMemory.buffer.slice(objectAddress, objectAddress + 1024),
-			),
-		};
+	constructor(
+		private emulator: Lv.Core,
+		private rawMemory: WebAssembly.Memory,
+	) {
+		this.memory = createMemoryView(emulator, rawMemory);
 
 		this.canvas = document.querySelector<HTMLCanvasElement>("#display")!;
 		this.context = this.canvas.getContext("2d")!;
@@ -197,29 +169,3 @@ export class Controller {
 		);
 	}
 }
-
-// Promise.all doesn't really maintain typing properly
-type CoreImports = [Emulator, { memory: WebAssembly.Memory }];
-
-// We have to import both of these because index doesn't export memory,
-// but index_bg does. index exports the functions, but index_bg doesn't.
-// The any annotation is a sad way of avoiding type errors while also importing
-// both of these concurrently.
-const main = async () => {
-	const [emulator, { memory }]: CoreImports = await Promise.all([
-		import("@lavender/core"),
-		// @ts-ignore
-		import("@lavender/core/target/index_bg.wasm"),
-	]);
-
-	// Load the rom into the emulator
-	// fetch("/game/pokemon_emerald.gba")
-	const response = await fetch("/rom_tests/bin/first.gba");
-	const buffer = await response.arrayBuffer();
-	emulator.init_emulation(new Uint8Array(buffer));
-
-	// Create a controller to interact with the emulation
-	new Controller(emulator, memory).enableDrawing();
-};
-
-main();

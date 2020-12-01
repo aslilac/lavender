@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import type { Controller, Emulator } from "./app";
+import type { Controller } from "../controller/EmulatorController";
 
 const drawingModes = [
 	"[Object]\n    all 4 layers, no rotate or scale",
@@ -16,7 +16,7 @@ const color = (x: number, yellow: number, red: number): string =>
 
 type OverlayProps = {
 	controller: Controller;
-	emulator: Emulator;
+	emulator: Lv.Core;
 };
 
 export const Overlay = (props: OverlayProps) => {
@@ -26,7 +26,7 @@ export const Overlay = (props: OverlayProps) => {
 	const renderTimeColor = color(renderTime, 3, 5);
 	const displayMode = controller.memory.io[0] & 7;
 
-	let step = () => {
+	const step = useCallback(() => {
 		try {
 			emulator.step_instruction();
 		} catch (e) {
@@ -38,7 +38,7 @@ export const Overlay = (props: OverlayProps) => {
 		} catch (e) {
 			console.error("Something went wrong in the render step", e);
 		}
-	};
+	}, [controller, emulator]);
 
 	return (
 		<section id="overlay">
@@ -98,7 +98,7 @@ export const Overlay = (props: OverlayProps) => {
 
 			<p>
 				&copy; 2020 &hearts;{" "}
-				<a href="https://mckay.la" style={{ color: "white" }}>
+				<a href="https://mckay.la" id="kayla-link">
 					McKayla
 				</a>
 			</p>

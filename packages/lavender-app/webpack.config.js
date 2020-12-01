@@ -11,7 +11,7 @@ const WebpackBar = require("webpackbar");
  */
 module.exports = (env, argv) => ({
 	// ------ webpack ------
-	entry: "./src/app.tsx",
+	entry: "./src/app.ts",
 	mode: "development",
 	devtool: "source-map",
 	stats: "minimal",
@@ -22,7 +22,7 @@ module.exports = (env, argv) => ({
 
 	output: {
 		path: path.resolve(__dirname, "target"),
-		filename: "client.js",
+		filename: "lavender.js",
 	},
 
 	performance: {

@@ -32,9 +32,10 @@ jobs:
             - run: yarn prettier --ignore-path .gitignore --check .
 
             - run: yarn workspace @lavender/core build
-            - run: yarn workspace @lavender/app typecheck
-            - run: yarn workspace @lavender/app build
+
+            - run: yarn workspace @lavender/app type-check
             - run: yarn workspace @lavender/app test
+            - run: yarn workspace @lavender/app build
 
     build-rs:
         runs-on: ubuntu-latest

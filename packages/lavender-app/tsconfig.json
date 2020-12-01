@@ -10,5 +10,5 @@
 		"strict": true,
 		"target": "esnext"
 	},
-	"include": ["@types/**/*.d.ts", "src/**/*"]
+	"include": ["../@types/**/*.d.ts", "src/**/*"]
 }
