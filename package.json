@@ -4,7 +4,8 @@
 		"packages/*"
 	],
 	"devDependencies": {
-		"prettier": "^2.1.2"
+		"@mckayla/prettier": "^0.8.90",
+		"prettier": "^2.2.1"
 	},
 	"scripts": {
 		"dev": "yarn workspace @lavender/app dev",

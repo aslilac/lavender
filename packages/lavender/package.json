@@ -1,5 +1,5 @@
 {
-	"name": "@lavender/app",
+	"name": "lavender",
 	"version": "0.0.1",
 	"author": "McKayla Washburn",
 	"description": "A Gameboy Advanced emulator written in Rust",
@@ -14,19 +14,18 @@
 		"react-dom": "^17.0.1"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.12.9",
-		"@babel/preset-env": "^7.12.7",
-		"@babel/preset-react": "^7.12.7",
-		"@babel/preset-typescript": "^7.12.7",
+		"@mckayla/eslint-plugin": "^0.1.10",
+		"@mckayla/tsconfig": "^0.41.0",
 		"@types/jest": "^26.0.15",
 		"@types/react": "^17.0.0",
 		"@types/react-dom": "^17.0.0",
 		"@wasm-tool/wasm-pack-plugin": "^1.3.1",
-		"babel-loader": "^8.1.0",
+		"eslint": "^7.16.0",
 		"html-webpack-plugin": "^4.5.0",
 		"jest": "^26.6.3",
+		"ts-jest": "^26.4.4",
+		"ts-loader": "^8.0.13",
 		"typescript": "^4.1.2",
-		"wasm-pack": "^0.9.1",
 		"webpack": "^4.42.2",
 		"webpack-cli": "^3.3.12",
 		"webpack-dev-server": "^3.11.0",
@@ -36,6 +35,7 @@
 		"build": "webpack --mode=production",
 		"dev": "webpack-dev-server",
 		"release": "webpack-dev-server --mode=production",
+		"lint": "eslint .",
 		"test": "jest",
 		"type-check": "tsc -p . --noEmit"
 	}

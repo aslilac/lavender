@@ -30,12 +30,14 @@ export const Overlay = (props: OverlayProps) => {
 		try {
 			emulator.step_instruction();
 		} catch (e) {
+			// eslint-disable-next-line no-console
 			console.error("Something went wrong in the emulation step", e);
 		}
 
 		try {
 			controller.render();
 		} catch (e) {
+			// eslint-disable-next-line no-console
 			console.error("Something went wrong in the render step", e);
 		}
 	}, [controller, emulator]);
@@ -47,12 +49,9 @@ export const Overlay = (props: OverlayProps) => {
 				Frame: {controller.frame}
 				<br />
 				Emulation time:{" "}
-				<span style={{ color: emulationTimeColor }}>
-					{emulationTime}ms
-				</span>
+				<span style={{ color: emulationTimeColor }}>{emulationTime}ms</span>
 				<br />
-				Frame time:{" "}
-				<span style={{ color: renderTimeColor }}>{renderTime}ms</span>
+				Frame time: <span style={{ color: renderTimeColor }}>{renderTime}ms</span>
 				<br />
 				Display mode: {displayMode} &lt;{drawingModes[displayMode]}&gt;
 				<br />

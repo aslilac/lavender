@@ -18,10 +18,10 @@ export class Controller {
 
 	// This shouldn't be an any, because we do know the type
 	constructor(
-		private emulator: Lv.Core,
-		private rawMemory: WebAssembly.Memory,
+		private readonly emulator: Lv.Core,
+		private readonly rawMemory: WebAssembly.Memory,
 	) {
-		this.memory = createMemoryView(emulator, rawMemory);
+		this.memory = createMemoryView(emulator, this.rawMemory);
 
 		this.canvas = document.querySelector<HTMLCanvasElement>("#display")!;
 		this.context = this.canvas.getContext("2d")!;
@@ -68,6 +68,7 @@ export class Controller {
 			if (event.code === "Space") {
 				this.shouldEmulate = !this.shouldEmulate;
 				if (this.shouldEmulate) {
+					// eslint-disable-next-line no-console
 					console.log("Drawing enabled");
 					requestAnimationFrame(() => this.emulate());
 				}
@@ -137,14 +138,9 @@ export class Controller {
 						_2d.fillRect(beginX, y, x - beginX + 0.2, 1.2);
 
 						// Translate from 15-bit color to 32-bit color
-						_2d.fillStyle =
-							"rgba(" +
-							(rgb15 & 0x001f) * 8 +
-							"," +
-							((rgb15 >> 5) & 0x001f) * 8 +
-							"," +
-							((rgb15 >> 10) & 0x001f) * 8 +
-							", 1)";
+						_2d.fillStyle = `rgba(${(rgb15 & 0x1f) * 8}, ${
+							((rgb15 >> 5) & 0x1f) * 8
+						}, ${((rgb15 >> 10) & 0x1f) * 8}, 1)`;
 						prevColor = rgb15;
 						beginX = x;
 					}

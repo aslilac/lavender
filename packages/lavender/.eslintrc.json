@@ -1,0 +1,7 @@
+{
+	"extends": ["plugin:@mckayla/ts"],
+	"rules": {
+		"@typescript-eslint/explicit-module-boundary-types": "off",
+		"@typescript-eslint/no-floating-promises": "off"
+	}
+}

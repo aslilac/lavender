@@ -1,0 +1,9 @@
+{
+	"extends": "@mckayla/tsconfig",
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"lib": ["dom", "esnext"],
+		"noUncheckedIndexedAccess": false
+	},
+	"include": ["../@types/**/*.d.ts", "src/**/*"]
+}

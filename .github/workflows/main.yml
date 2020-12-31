@@ -33,9 +33,10 @@ jobs:
 
             - run: yarn workspace @lavender/core build
 
-            - run: yarn workspace @lavender/app type-check
-            - run: yarn workspace @lavender/app test
-            - run: yarn workspace @lavender/app build
+            - run: yarn workspace lavender lint
+            - run: yarn workspace lavender type-check
+            - run: yarn workspace lavender test
+            - run: yarn workspace lavender build
 
     build-rs:
         runs-on: ubuntu-latest
