@@ -74,9 +74,7 @@ class Three {
 			shape.forEach(([name, size]) => {
 				const value = vertex[name];
 
-				console.assert(
-					Array.isArray(value) || typeof value === "number",
-				);
+				console.assert(Array.isArray(value) || typeof value === "number");
 				if (Array.isArray(value)) console.assert(value.length === size);
 
 				if (Array.isArray(value))
