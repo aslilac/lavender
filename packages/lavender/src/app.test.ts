@@ -9,3 +9,5 @@ test("test placeholders", () => {
 test("so robust, wow", () => {
 	expect(true).toBe(true);
 });
+
+export {};

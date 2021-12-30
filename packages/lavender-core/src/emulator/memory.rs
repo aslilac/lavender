@@ -70,6 +70,7 @@ pub struct Memory {
 impl Memory {
     pub fn init() -> Self {
         let mut memory = Self {
+            // TODO: Try to switch to `box [0; BIOS_SIZE]` etc. eventually
             bios: vec![0; BIOS_SIZE],
             ext: vec![0; EXT_SIZE],
             ram: vec![0; RAM_SIZE],

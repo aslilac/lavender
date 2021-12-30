@@ -3,7 +3,8 @@
 	"compilerOptions": {
 		"jsx": "react-jsx",
 		"lib": ["dom", "esnext"],
-		"noUncheckedIndexedAccess": false
+		"noUncheckedIndexedAccess": false,
+		"types": ["jest"]
 	},
-	"include": ["../@types/**/*.d.ts", "src/**/*"]
+	"include": ["../@types/**/*.d.ts", "./src/**/*"]
 }

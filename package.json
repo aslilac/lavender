@@ -8,10 +8,10 @@
 		"prettier": "^2.2.1"
 	},
 	"scripts": {
-		"dev": "yarn workspace @lavender/app dev",
-		"release": "yarn workspace @lavender/app release",
+		"dev": "npm run dev -w lavender",
+		"start": "npm run start -w lavender",
 		"fmt": "prettier --ignore-path .gitignore --write . && cargo fmt",
-		"postinstall": "node ./bin/hello",
-		"test": "yarn workspace @lavender/app test && cargo test"
+		"lint": "npm run lint -w lavender",
+		"test": "npm run test -w lavender && cargo test"
 	}
 }

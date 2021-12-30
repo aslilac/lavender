@@ -1,7 +1,7 @@
 use crate::emulator::{
     armv4t::arm::{decode_instruction, instructions::*, process_instruction},
-    cpu::RegisterNames::*,
     Emulator,
+    Reg::*,
 };
 
 #[test]
@@ -16,12 +16,12 @@ fn decode_add() {
 
 #[test]
 fn behavior_add() {
-    let mut emulator = Emulator::dummy();
+    let mut emulator = Emulator::new_for_test();
 
     // Initialize r3 adn r4 as the accumulators, and r5 as the increment for r4
-    emulator.cpu.set_register_value(r3, 0);
-    emulator.cpu.set_register_value(r4, 0);
-    emulator.cpu.set_register_value(r5, 3);
+    emulator.cpu.registers.set_value(r3, 0);
+    emulator.cpu.registers.set_value(r4, 0);
+    emulator.cpu.registers.set_value(r5, 3);
 
     for _ in 0..10 {
         // add r3, r3, #1
@@ -31,8 +31,8 @@ fn behavior_add() {
     }
 
     // Assert that the adding completed correctly
-    assert_eq!(emulator.cpu.get_register_value(r3), 10);
-    assert_eq!(emulator.cpu.get_register_value(r4), 30);
+    assert_eq!(emulator.cpu.registers.get_value(r3), 10);
+    assert_eq!(emulator.cpu.registers.get_value(r4), 30);
 }
 
 #[test]
@@ -47,33 +47,33 @@ fn decode_b() {
 
 #[test]
 fn behavior_b() {
-    let mut emulator = Emulator::dummy();
+    let mut emulator = Emulator::new_for_test();
 
     // Set the pc to a known value
     let starting_position = 0x0100_0000;
-    emulator.cpu.set_register_value(r15, starting_position);
+    emulator.cpu.registers.set_value(r15, starting_position);
 
     // Branch with distance of 0
     process_instruction(&mut emulator, 0b1110_101_0_0000_0000_0000_0000_0000_0000);
-    assert_eq!(emulator.cpu.get_register_value(r15), starting_position);
+    assert_eq!(emulator.cpu.registers.get_value(r15), starting_position);
 
     // Branch with largest positive number (0x7fffff<<2)
     process_instruction(&mut emulator, 0b1110_101_0_0111_1111_1111_1111_1111_1111);
     assert_eq!(
-        emulator.cpu.get_register_value(r15),
+        emulator.cpu.registers.get_value(r15),
         starting_position + (0x7fffff << 2)
     );
 
     // Branch with smallest negative number (-4)
     process_instruction(&mut emulator, 0b1110_101_0_1111_1111_1111_1111_1111_1111);
     assert_eq!(
-        emulator.cpu.get_register_value(r15),
+        emulator.cpu.registers.get_value(r15),
         starting_position + (0x7fffff << 2) - 4
     );
 
     // Branch with largest negative number (0x800000<<2)
     process_instruction(&mut emulator, 0b1110_101_0_1000_0000_0000_0000_0000_0000);
-    assert_eq!(emulator.cpu.get_register_value(r15), starting_position - 8);
+    assert_eq!(emulator.cpu.registers.get_value(r15), starting_position - 8);
 }
 
 #[test]
@@ -113,15 +113,15 @@ fn decode_eor() {
 
 #[test]
 fn behavior_eor() {
-    let mut emulator = Emulator::dummy();
+    let mut emulator = Emulator::new_for_test();
 
-    emulator.cpu.set_register_value(r4, 0xaaaaaaaa);
-    emulator.cpu.set_register_value(r5, 0xbebebebe);
+    emulator.cpu.registers.set_value(r4, 0xaaaaaaaa);
+    emulator.cpu.registers.set_value(r5, 0xbebebebe);
 
     // eor r4, r4, r5
     process_instruction(&mut emulator, 0b1110_00_0_0001_1_0100_0100_00000000_0101);
 
-    assert_eq!(emulator.cpu.get_register_value(r4), 0x14141414);
+    assert_eq!(emulator.cpu.registers.get_value(r4), 0x14141414);
 }
 
 #[test]

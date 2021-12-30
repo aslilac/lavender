@@ -21,7 +21,8 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
         // Get the value from the register
         let value = emulator
             .cpu
-            .get_register_value(RegisterNames::try_from(instruction & 15).unwrap());
+            .registers
+            .get_value(Reg::try_from(instruction & 15).unwrap());
 
         let shift = if is_register_shift {
             // Check to make sure that extension space instructions don't end
@@ -37,7 +38,8 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
             // wouldn't matter anyway)
             0xff & emulator
                 .cpu
-                .get_register_value(RegisterNames::try_from(instruction >> 8 & 15).unwrap())
+                .registers
+                .get_value(Reg::try_from(instruction >> 8 & 15).unwrap())
         } else {
             instruction >> 7 & 0x1f
         };
@@ -47,7 +49,13 @@ pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32
             (0, _) => value << shift,
             (1, _) => value >> shift,
             (2, _) => value,
-            (3, 0) => (if emulator.cpu.get_c() { 1 << 31 } else { 0 }) | (value >> 1),
+            (3, 0) => {
+                (if emulator.cpu.registers.get_c() {
+                    1 << 31
+                } else {
+                    0
+                }) | (value >> 1)
+            }
             (3, _) => value.rotate_right(shift),
             (_, _) => panic!("Shift mode not matched for shifter_operand."),
         }
@@ -58,14 +66,12 @@ pub fn process_addressing_mode(emulator: &mut Emulator, instruction: u32) -> u32
     0x0800_0000
 }
 
-pub fn get_data_processing_operands(
-    emulator: &mut Emulator,
-    instruction: u32,
-) -> (RegisterNames, u32, u32) {
-    let destination_register = RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
+pub fn get_data_processing_operands(emulator: &mut Emulator, instruction: u32) -> (Reg, u32, u32) {
+    let destination_register = Reg::try_from(instruction >> 12 & 0xf).unwrap();
     let operand_register_value = emulator
         .cpu
-        .get_register_value(RegisterNames::try_from(instruction >> 16 & 0xf).unwrap());
+        .registers
+        .get_value(Reg::try_from(instruction >> 16 & 0xf).unwrap());
     let shifter_operand_value = process_shifter_operand(emulator, instruction);
 
     (

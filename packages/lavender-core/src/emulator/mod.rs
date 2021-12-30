@@ -1,8 +1,10 @@
+pub mod arm;
 pub mod armv4t;
 pub mod cpu;
 pub mod memory;
 
-use armv4t::{arm, thumb};
+pub use arm::*;
+use armv4t::{arm as old_arm, thumb};
 use cpu::*;
 use memory::*;
 
@@ -35,7 +37,7 @@ impl Emulator {
 
     /// Used to create simplified instances for use in unit testing. They do not
     /// contain a BIOS and have a much smaller amount of memory available.
-    pub fn dummy() -> Self {
+    pub fn new_for_test() -> Self {
         Self {
             cpu: Arm7Tdmi::init(),
             memory: Memory::init_small_no_bios(),
@@ -60,17 +62,19 @@ impl Emulator {
 
     /// Step forward by one instruction
     pub fn step_instruction(&mut self) {
-        if self.cpu.get_thumb_bit() {
-            self.cpu.registers.r15 += 2;
+        use Reg::*;
+
+        if self.cpu.registers.get_thumb_bit() {
+            self.cpu.registers.map_value(r15, |v| v + 2);
         } else {
             // Read the instruction and increment the PC before running the
             // instruction so that we don't do anything weird if the instruction
             // changes the value of r15.
             let instruction = self.memory.read_word(self.cpu.registers.r15);
-            self.cpu.registers.r15 += 4;
+            self.cpu.registers.map_value(r15, |v| v + 4);
 
-            let cycles_used = arm::process_instruction(self, instruction);
-            // let cycles_used = arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0000_00000001);
+            let cycles_used = old_arm::process_instruction(self, instruction);
+            // let cycles_used = old_arm::process_instruction(self, 0b1110_00_1_0100_1_0011_0011_0000_00000001);
             self.remaining_cycles = self.remaining_cycles.saturating_sub(cycles_used);
         }
     }

@@ -1,7 +1,6 @@
 {
-	"extends": ["plugin:@mckayla/ts"],
+	"extends": ["mckayla/tsx"],
 	"rules": {
-		"@typescript-eslint/explicit-module-boundary-types": "off",
-		"@typescript-eslint/no-floating-promises": "off"
+		"react/react-in-jsx-scope": "off"
 	}
 }

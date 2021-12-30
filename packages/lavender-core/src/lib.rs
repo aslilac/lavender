@@ -6,6 +6,7 @@
 
 // This should be removed when things are much closer to finalized
 #![allow(dead_code, unused_imports, unused_variables)]
+#![feature(box_syntax)]
 
 /// The core logic of the emulator is within this module.
 pub mod emulator;
@@ -14,17 +15,6 @@ use emulator::Emulator;
 use lazy_static::lazy_static;
 use std::sync::Mutex;
 use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-#[macro_export]
-macro_rules! log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
 
 lazy_static! {
     static ref EMULATION: Mutex<Emulator> = Mutex::new(Emulator::new());
@@ -86,36 +76,36 @@ pub fn step_instruction() {
 /// Get the values of the current register bank
 #[wasm_bindgen]
 pub fn read_registers() -> Vec<u32> {
-    use emulator::cpu::RegisterNames::*;
+    use emulator::Reg::*;
 
     let emulation = EMULATION.lock().unwrap();
     vec![
-        emulation.cpu.get_register_value(r0),
-        emulation.cpu.get_register_value(r1),
-        emulation.cpu.get_register_value(r2),
-        emulation.cpu.get_register_value(r3),
-        emulation.cpu.get_register_value(r4),
-        emulation.cpu.get_register_value(r5),
-        emulation.cpu.get_register_value(r6),
-        emulation.cpu.get_register_value(r7),
-        emulation.cpu.get_register_value(r8),
-        emulation.cpu.get_register_value(r9),
-        emulation.cpu.get_register_value(r10),
-        emulation.cpu.get_register_value(r11),
-        emulation.cpu.get_register_value(r12),
-        emulation.cpu.get_register_value(r13),
-        emulation.cpu.get_register_value(r14),
-        emulation.cpu.get_register_value(r15),
+        emulation.cpu.registers.get_value(r0),
+        emulation.cpu.registers.get_value(r1),
+        emulation.cpu.registers.get_value(r2),
+        emulation.cpu.registers.get_value(r3),
+        emulation.cpu.registers.get_value(r4),
+        emulation.cpu.registers.get_value(r5),
+        emulation.cpu.registers.get_value(r6),
+        emulation.cpu.registers.get_value(r7),
+        emulation.cpu.registers.get_value(r8),
+        emulation.cpu.registers.get_value(r9),
+        emulation.cpu.registers.get_value(r10),
+        emulation.cpu.registers.get_value(r11),
+        emulation.cpu.registers.get_value(r12),
+        emulation.cpu.registers.get_value(r13),
+        emulation.cpu.registers.get_value(r14),
+        emulation.cpu.registers.get_value(r15),
     ]
 }
 
 /// Get the status of the cpsr register.
 #[wasm_bindgen]
 pub fn read_cpsr() -> u32 {
-    use emulator::cpu::RegisterNames::cpsr;
+    use emulator::Reg::cpsr;
 
     let emulation = EMULATION.lock().unwrap();
-    emulation.cpu.get_register_value(cpsr)
+    emulation.cpu.registers.get_value(cpsr)
 }
 
 /// Allows us to inspect parts of memory the way that the emulator sees them.

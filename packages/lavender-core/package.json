@@ -6,8 +6,8 @@
 	"license": "MIT",
 	"repository": "https://github.com/partheseas/lavender",
 	"main": "target/index.js",
-	"dependencies": {
-		"wasm-pack": "^0.9.1"
+	"devDependencies": {
+		"wasm-pack": "^0.10.2"
 	},
 	"scripts": {
 		"build": "wasm-pack build --release --out-dir target --out-name index"

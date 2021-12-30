@@ -1,4 +1,4 @@
-use crate::emulator::{cpu::*, Emulator};
+use crate::emulator::{cpu::*, ConditionCode, Emulator, Reg};
 use instructions::*;
 use std::convert::TryFrom;
 
@@ -6,8 +6,8 @@ use std::convert::TryFrom;
 /// number of cycles used.
 pub fn process_instruction(emulator: &mut Emulator, instruction: u32) -> u32 {
     // Check if the condition is met before executing the instruction.
-    let condition = ConditionCodes::try_from(instruction >> 28 & 15).unwrap();
-    if !emulator.cpu.check_condition(condition) {
+    let condition = ConditionCode::try_from(instruction >> 28 & 15).unwrap();
+    if !emulator.cpu.registers.check_condition(condition) {
         return 1;
     }
 
@@ -17,7 +17,7 @@ pub fn process_instruction(emulator: &mut Emulator, instruction: u32) -> u32 {
 /// Decodes the instruction and returns the appropriate implementation.
 pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) -> u32 {
     // [27:20] and [7:4] are the CPU's decode bits
-    // The first onces we want to look at are the three bits [27:25]
+    // The first ones we want to look at are the three bits [27:25]
     let category = instruction >> 25 & 7;
 
     match category {
@@ -129,34 +129,81 @@ pub fn decode_instruction(instruction: u32) -> fn(&mut Emulator, u32) -> u32 {
     }
 }
 
+#[allow(non_camel_case_types)]
+enum Instruction {
+    adc {
+        i: u32,
+        s: u32,
+        rn: u32,
+        rd: u32,
+        shifter: u32,
+    },
+    add {
+        i: u32,
+        s: u32,
+        rn: u32,
+        rd: u32,
+        shifter: u32,
+    },
+    and {
+        i: u32,
+        s: u32,
+        rn: u32,
+        rd: u32,
+        shifter: u32,
+    },
+    b {
+        l: u32,
+        offset: i32,
+    },
+    bic {
+        i: u32,
+        s: u32,
+        rn: u32,
+        rd: u32,
+        shifter: u32,
+    },
+    bkpt {
+        immed_1: u32,
+        immed_0: u32,
+    },
+    blx_unconditional {
+        h: u32,
+        immed: u32,
+    },
+    blx_rm {
+        rm: u32,
+    },
+    bx {
+        rm: u32,
+    },
+}
+
 /// A module containing functions which implement all of the 32-bit ARM v4T
 /// instructions.
 pub mod instructions {
-    use crate::emulator::{
-        armv4t::utils::*,
-        cpu::{RegisterNames::*, *},
-        Emulator,
-    };
+    use crate::emulator::{armv4t::utils::*, cpu::*, Emulator, Reg::*};
     use std::convert::TryFrom;
 
     /// Addition that includes carry from the carry bit in the CPSR register.
     pub fn adc(emulator: &mut Emulator, instruction: u32) -> u32 {
-        let carry_amount = if emulator.cpu.get_c() { 1 } else { 0 };
+        let carry_amount = if emulator.cpu.registers.get_c() { 1 } else { 0 };
         let should_update_flags = instruction >> 20 & 1 > 0;
 
         // Get the instruction operands
-        let destination_register = RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
-        let operand_register = RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
+        let destination_register = Reg::try_from(instruction >> 12 & 0xf).unwrap();
+        let operand_register = Reg::try_from(instruction >> 16 & 0xf).unwrap();
         let shifter_operand = process_shifter_operand(emulator, instruction);
 
         let (result, overflow) = emulator
             .cpu
-            .get_register_value(operand_register)
+            .registers
+            .get_value(operand_register)
             .overflowing_add(shifter_operand + carry_amount);
 
         // Update flags if necessary
         if should_update_flags {
-            emulator.cpu.set_nzcv(
+            emulator.cpu.registers.set_nzcv(
                 result >> 31 & 1 > 0,
                 if result == 0 { true } else { false },
                 // xxx: one of these two is incorrect
@@ -167,7 +214,8 @@ pub mod instructions {
 
         emulator
             .cpu
-            .set_register_value(destination_register, result);
+            .registers
+            .set_value(destination_register, result);
 
         // xxx: Return the actual number of cycles that the instruction should take
         5
@@ -188,9 +236,10 @@ pub mod instructions {
             if destination_register == r15 {
                 emulator
                     .cpu
-                    .set_register_value(cpsr, emulator.cpu.get_register_value(spsr));
+                    .registers
+                    .set_value(cpsr, emulator.cpu.registers.get_value(spsr));
             } else {
-                emulator.cpu.set_nzcv(
+                emulator.cpu.registers.set_nzcv(
                     result >> 31 & 1 > 0,
                     if result == 0 { true } else { false },
                     // xxx: one of these two is incorrect
@@ -202,7 +251,8 @@ pub mod instructions {
 
         emulator
             .cpu
-            .set_register_value(destination_register, result);
+            .registers
+            .set_value(destination_register, result);
 
         // xxx: Return the actual number of cycles that the instruction should take
         5
@@ -222,9 +272,10 @@ pub mod instructions {
             if destination_register == r15 {
                 emulator
                     .cpu
-                    .set_register_value(cpsr, emulator.cpu.get_register_value(spsr));
+                    .registers
+                    .set_value(cpsr, emulator.cpu.registers.get_value(spsr));
             } else {
-                emulator.cpu.set_nzcv(
+                emulator.cpu.registers.set_nzcv(
                     result >> 31 & 1 > 0,
                     if result == 0 { true } else { false },
                     false, // xxx: c: shifter_carry_out
@@ -235,7 +286,8 @@ pub mod instructions {
 
         emulator
             .cpu
-            .set_register_value(destination_register, result);
+            .registers
+            .set_value(destination_register, result);
 
         // xxx: Return the actual number of cycles that the instruction should take
         5
@@ -243,7 +295,7 @@ pub mod instructions {
 
     /// Relative code branching by up 32MB in either direction.
     pub fn b(emulator: &mut Emulator, instruction: u32) -> u32 {
-        let pc_value = emulator.cpu.get_register_value(r15);
+        let pc_value = emulator.cpu.registers.get_value(r15);
         let negative = instruction >> 23 & 1 > 0;
 
         // The shift amount is a 26 bit two's complement integer stored in 24 bits.
@@ -258,7 +310,8 @@ pub mod instructions {
 
         emulator
             .cpu
-            .set_register_value(r15, pc_value.wrapping_add(shift));
+            .registers
+            .set_value(r15, pc_value.wrapping_add(shift));
 
         // xxx: Return the actual number of cycles that the instruction should take
         5
@@ -269,19 +322,20 @@ pub mod instructions {
         let should_update_flags = instruction >> 20 & 1 > 0;
 
         // Get the instruction operands
-        let destination_register = RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
-        let operand_register = RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
+        let destination_register = Reg::try_from(instruction >> 12 & 0xf).unwrap();
+        let operand_register = Reg::try_from(instruction >> 16 & 0xf).unwrap();
         let shifter_operand = process_shifter_operand(emulator, instruction);
 
-        let result = emulator.cpu.get_register_value(operand_register) & !shifter_operand;
+        let result = emulator.cpu.registers.get_value(operand_register) & !shifter_operand;
 
         if should_update_flags {
             if destination_register == r15 {
                 emulator
                     .cpu
-                    .set_register_value(cpsr, emulator.cpu.get_register_value(spsr));
+                    .registers
+                    .set_value(cpsr, emulator.cpu.registers.get_value(spsr));
             } else {
-                emulator.cpu.set_nzcv(
+                emulator.cpu.registers.set_nzcv(
                     result >> 31 & 1 > 0,
                     if result == 0 { true } else { false },
                     false, // xxx: c: shifter_carry_out
@@ -292,7 +346,8 @@ pub mod instructions {
 
         emulator
             .cpu
-            .set_register_value(destination_register, result);
+            .registers
+            .set_value(destination_register, result);
 
         // xxx: Return the actual number of cycles that the instruction should take
         5
@@ -301,7 +356,7 @@ pub mod instructions {
     /// Linked relative code branching by up 32MB in either direction. Sets r14
     /// with an address to return to after execution.
     pub fn bl(emulator: &mut Emulator, instruction: u32) -> u32 {
-        let pc_value = emulator.cpu.get_register_value(r15);
+        let pc_value = emulator.cpu.registers.get_value(r15);
         let negative = instruction >> 23 & 1 > 0;
 
         // The shift amount is a 26 bit two's complement integer stored in 24 bits.
@@ -314,10 +369,11 @@ pub mod instructions {
             instruction & 0x7fffff
         } << 2;
 
-        emulator.cpu.set_register_value(r14, pc_value);
+        emulator.cpu.registers.set_value(r14, pc_value);
         emulator
             .cpu
-            .set_register_value(r15, pc_value.wrapping_add(shift));
+            .registers
+            .set_value(r15, pc_value.wrapping_add(shift));
 
         // xxx: Return the actual number of cycles that the instruction should take
         5
@@ -374,7 +430,8 @@ pub mod instructions {
 
         emulator
             .cpu
-            .set_register_value(destination_register, result);
+            .registers
+            .set_value(destination_register, result);
 
         5
     }
@@ -404,13 +461,16 @@ pub mod instructions {
         PC = data AND 0xFFFFFFFC Rd = data
         */
 
-        let operand_register = RegisterNames::try_from(instruction >> 16 & 0xf).unwrap();
-        let destination_register = RegisterNames::try_from(instruction >> 12 & 0xf).unwrap();
+        let operand_register = Reg::try_from(instruction >> 16 & 0xf).unwrap();
+        let destination_register = Reg::try_from(instruction >> 12 & 0xf).unwrap();
         let addressing_mode = process_addressing_mode(emulator, instruction);
 
         let value = emulator.memory.read_word(addressing_mode);
 
-        emulator.cpu.set_register_value(destination_register, value);
+        emulator
+            .cpu
+            .registers
+            .set_value(destination_register, value);
 
         5
     }

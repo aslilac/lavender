@@ -2,7 +2,7 @@ import { Controller } from "./controller/EmulatorController";
 
 // We have to import both of these because index doesn't export memory,
 // but index_bg does. index exports the functions, but index_bg doesn't.
-const main = async () => {
+async function main() {
 	const [emulator, { memory }] = await Promise.all([
 		import("@lavender/core"),
 		import("@lavender/core/target/index_bg.wasm"),
@@ -16,6 +16,6 @@ const main = async () => {
 
 	// Create a controller to interact with the emulation
 	new Controller(emulator, memory).enableDrawing();
-};
+}
 
-main();
+void main();
