@@ -4,8 +4,8 @@
 		"packages/*"
 	],
 	"devDependencies": {
-		"@mckayla/prettier": "^0.8.90",
-		"prettier": "^2.2.1"
+		"@mckayla/prettier": "^1.0.1",
+		"prettier": "^2.5.1"
 	},
 	"scripts": {
 		"dev": "npm run dev -w lavender",
