@@ -31,7 +31,7 @@ jobs:
 
             - run: yarn prettier --ignore-path .gitignore --check .
 
-            - run: yarn workspace @lavender/core build
+            - run: yarn workspace lavender build
 
             - run: yarn workspace lavender lint
             - run: yarn workspace lavender type-check

@@ -1,17 +1,18 @@
 {
 	"private": true,
 	"workspaces": [
-		"packages/*"
+		"lavender",
+		"lavender-app"
 	],
 	"devDependencies": {
 		"@mckayla/prettier": "^1.0.1",
 		"prettier": "^2.5.1"
 	},
 	"scripts": {
-		"dev": "npm run dev -w lavender",
-		"start": "npm run start -w lavender",
+		"dev": "npm run dev -w @lavender/app",
+		"start": "npm run start -w @lavender/app",
 		"fmt": "prettier --ignore-path .gitignore --write . && cargo fmt",
-		"lint": "npm run lint -w lavender",
-		"test": "npm run test -w lavender && cargo test"
+		"lint": "npm run lint -w @lavender/app && cargo clippy",
+		"test": "npm run test -w @lavender/app && cargo test"
 	}
 }

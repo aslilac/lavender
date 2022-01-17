@@ -1,9 +1,5 @@
 # Lavender
 
-[![build status](https://github.com/partheseas/lavender/workflows/main/badge.svg)](https://github.com/partheseas/lavender/actions)
-![package version](https://img.shields.io/badge/lavender-v0.0.1-9394e4.svg)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
-
 A Game Boy Advance emulator written in Rust that runs in the browser.
 
 ## Goals
@@ -57,21 +53,21 @@ To get set up for development you need to install all of the following tools...
 -   [Yarn](https://yarnpkg.com)
 -   [Rust](https://rustup.rs)
 
-Then run `yarn` and `cargo build` to install all the other dependencies from
+Then run `npm install` and `cargo build` to install all the other dependencies from
 npm and Cargo.
 
 Once all of that is done, to start a development server that will automatically
 recompile and refresh your browser when files are updated, simply run...
 
 ```Shell
-yarn dev
+npm run dev
 ```
 
 If you want to run it in release mode (optimized and high-performance, basically
 if you want to actually play games) then run...
 
 ```Shell
-yarn release
+npm run release
 ```
 
 You should then be able to access the emulator at `http://localhost:1234` after
