@@ -2,5 +2,5 @@
 
 members = [
 	# "packages/lavender-book",
-	"packages/lavender-core",
+	"lavender",
 ]

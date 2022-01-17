@@ -1,10 +1,10 @@
 {
-	"name": "@lavender/core",
+	"name": "lavender",
 	"version": "0.0.1",
-	"author": "McKayla Washburn",
+	"author": "McKayla Washburn <mckayla@hey.com>",
 	"description": "A Gameboy Advanced emulator written in Rust",
 	"license": "MIT",
-	"repository": "https://github.com/partheseas/lavender",
+	"repository": "https://github.com/aslilac/lavender",
 	"main": "target/index.js",
 	"devDependencies": {
 		"wasm-pack": "^0.10.2"
