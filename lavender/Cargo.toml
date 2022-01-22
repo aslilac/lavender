@@ -1,7 +1,7 @@
 [package]
 name = "lavender"
 version = "0.0.1"
-authors = ["McKayla Washburn"]
+authors = ["McKayla Washburn <mckayla@hey.com"]
 description = "A Gameboy Advanced emulator written in Rust"
 license = "MIT"
 edition = "2021"
