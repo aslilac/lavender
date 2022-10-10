@@ -17,101 +17,101 @@ use std::sync::Mutex;
 use wasm_bindgen::prelude::*;
 
 lazy_static! {
-    static ref EMULATION: Mutex<Emulator> = Mutex::new(Emulator::new());
+	static ref EMULATION: Mutex<Emulator> = Mutex::new(Emulator::new());
 }
 
 /// Starts the emulation of the provided ROM.
 #[wasm_bindgen]
 pub fn init_emulation(rom: &[u8]) {
-    let mut emulation = EMULATION.lock().unwrap();
+	let mut emulation = EMULATION.lock().unwrap();
 
-    emulation.load_rom(&rom);
-    emulation.test();
+	emulation.load_rom(&rom);
+	emulation.test();
 }
 
 /// Returns a pointer to the beginning of the IO memory section.
 #[wasm_bindgen]
 pub fn get_io_address() -> *mut u8 {
-    let mut emulation = EMULATION.lock().unwrap();
-    &mut emulation.memory.io[0] as *mut u8
+	let mut emulation = EMULATION.lock().unwrap();
+	&mut emulation.memory.io[0] as *mut u8
 }
 
 /// Returns a pointer to the beginning of the palette memory section.
 #[wasm_bindgen]
 pub fn get_palette_address() -> *const u8 {
-    let emulation = EMULATION.lock().unwrap();
-    &emulation.memory.palette[0] as *const u8
+	let emulation = EMULATION.lock().unwrap();
+	&emulation.memory.palette[0] as *const u8
 }
 
 /// Returns a pointer to the beginning of the VRAM memory section.
 #[wasm_bindgen]
 pub fn get_vram_address() -> *const u8 {
-    let emulation = EMULATION.lock().unwrap();
-    &emulation.memory.vram[0] as *const u8
+	let emulation = EMULATION.lock().unwrap();
+	&emulation.memory.vram[0] as *const u8
 }
 
 /// Returns a pointer to the beginning of the object attribute memory section.
 #[wasm_bindgen]
 pub fn get_object_address() -> *const u8 {
-    let emulation = EMULATION.lock().unwrap();
-    &emulation.memory.object[0] as *const u8
+	let emulation = EMULATION.lock().unwrap();
+	&emulation.memory.object[0] as *const u8
 }
 
 /// Called from JavaScript when it is time to produce the next frame.
 #[wasm_bindgen]
 pub fn step_frames(frames: u32) {
-    let mut emulation = EMULATION.lock().unwrap();
-    for _ in 0..frames {
-        emulation.step_frame();
-    }
+	let mut emulation = EMULATION.lock().unwrap();
+	for _ in 0..frames {
+		emulation.step_frame();
+	}
 }
 
 /// Step forward by one instruction
 #[wasm_bindgen]
 pub fn step_instruction() {
-    let mut emulation = EMULATION.lock().unwrap();
-    emulation.step_instruction();
+	let mut emulation = EMULATION.lock().unwrap();
+	emulation.step_instruction();
 }
 
 /// Get the values of the current register bank
 #[wasm_bindgen]
 pub fn read_registers() -> Vec<u32> {
-    use emulator::Reg::*;
+	use emulator::Reg::*;
 
-    let emulation = EMULATION.lock().unwrap();
-    vec![
-        emulation.cpu.registers.get_value(r0),
-        emulation.cpu.registers.get_value(r1),
-        emulation.cpu.registers.get_value(r2),
-        emulation.cpu.registers.get_value(r3),
-        emulation.cpu.registers.get_value(r4),
-        emulation.cpu.registers.get_value(r5),
-        emulation.cpu.registers.get_value(r6),
-        emulation.cpu.registers.get_value(r7),
-        emulation.cpu.registers.get_value(r8),
-        emulation.cpu.registers.get_value(r9),
-        emulation.cpu.registers.get_value(r10),
-        emulation.cpu.registers.get_value(r11),
-        emulation.cpu.registers.get_value(r12),
-        emulation.cpu.registers.get_value(r13),
-        emulation.cpu.registers.get_value(r14),
-        emulation.cpu.registers.get_value(r15),
-    ]
+	let emulation = EMULATION.lock().unwrap();
+	vec![
+		emulation.cpu.registers.get_value(r0),
+		emulation.cpu.registers.get_value(r1),
+		emulation.cpu.registers.get_value(r2),
+		emulation.cpu.registers.get_value(r3),
+		emulation.cpu.registers.get_value(r4),
+		emulation.cpu.registers.get_value(r5),
+		emulation.cpu.registers.get_value(r6),
+		emulation.cpu.registers.get_value(r7),
+		emulation.cpu.registers.get_value(r8),
+		emulation.cpu.registers.get_value(r9),
+		emulation.cpu.registers.get_value(r10),
+		emulation.cpu.registers.get_value(r11),
+		emulation.cpu.registers.get_value(r12),
+		emulation.cpu.registers.get_value(r13),
+		emulation.cpu.registers.get_value(r14),
+		emulation.cpu.registers.get_value(r15),
+	]
 }
 
 /// Get the status of the cpsr register.
 #[wasm_bindgen]
 pub fn read_cpsr() -> u32 {
-    use emulator::Reg::cpsr;
+	use emulator::Reg::cpsr;
 
-    let emulation = EMULATION.lock().unwrap();
-    emulation.cpu.registers.get_value(cpsr)
+	let emulation = EMULATION.lock().unwrap();
+	emulation.cpu.registers.get_value(cpsr)
 }
 
 /// Allows us to inspect parts of memory the way that the emulator sees them.
 // todo: Needs to be robustified for Thumb instructions.
 #[wasm_bindgen]
 pub fn read_next_instruction() -> u32 {
-    let emulation = EMULATION.lock().unwrap();
-    emulation.memory.read_word(emulation.cpu.registers.r15)
+	let emulation = EMULATION.lock().unwrap();
+	emulation.memory.read_word(emulation.cpu.registers.r15)
 }
