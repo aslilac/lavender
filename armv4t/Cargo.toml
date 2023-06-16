@@ -1,0 +1,13 @@
+[package]
+name = "lavender_armv4t"
+version = "0.0.1"
+authors = ["McKayla Washburn <mckayla@hey.com"]
+description = "Decoder and disassembler for ARMv4T instructions"
+license = "MIT"
+edition = "2021"
+
+[lib]
+path = "./lib.rs"
+
+[dependencies]
+num_enum = { workspace = true }

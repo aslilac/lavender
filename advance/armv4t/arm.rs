@@ -1,4 +1,4 @@
-use crate::emulator::{cpu::*, ConditionCode, Emulator, Reg};
+use crate::emulator::{core::*, ConditionCode, Emulator, Reg};
 use instructions::*;
 use std::convert::TryFrom;
 
@@ -182,7 +182,7 @@ enum Instruction {
 /// A module containing functions which implement all of the 32-bit ARM v4T
 /// instructions.
 pub mod instructions {
-	use crate::emulator::{armv4t::utils::*, cpu::*, Emulator, Reg::*};
+	use crate::emulator::{armv4t::utils::*, core::*, Emulator, Reg::*};
 	use std::convert::TryFrom;
 
 	/// Addition that includes carry from the carry bit in the CPSR register.

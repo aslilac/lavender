@@ -1,17 +1,13 @@
-# macOS
 .DS_Store
-
-# Dependencies
-node_modules
-
-# Build artifacts
-.cache
-.parcel-cache
-book
-dist
-target
+.env*
+.idea/
+.nova/
+.vscode/
+build/
+coverage/
+dist/
+node_modules/
+output/
+target/
+*.log
 *.tsbuildinfo
-
-# Vercel
-.now
-.vercel

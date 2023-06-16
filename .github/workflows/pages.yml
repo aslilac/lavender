@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -20,18 +20,15 @@ jobs:
           toolchain: stable
           default: true
 
-      # - run: cargo install mdbook
-      # - run: mdbook build ./lavender-book/
-
       - run: |
           curl -Lo ./mdbook.tar.gz https://github.com/rust-lang/mdBook/releases/download/v0.4.21/mdbook-v0.4.21-x86_64-unknown-linux-gnu.tar.gz && \
             tar -xf ./mdbook.tar.gz && \
-            ./mdbook build ./lavender-book/
+            ./mdbook build doc/book/
 
       - uses: actions/upload-pages-artifact@v1.0.4
         name: Upload static assets
         with:
-          path: ./lavender-book/book/
+          path: doc/book/output/
 
   deploy:
     runs-on: ubuntu-latest

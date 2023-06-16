@@ -1,7 +1,6 @@
-use num_enum::{IntoPrimitive, TryFromPrimitive};
-use std::convert::TryFrom;
-
-pub use super::arm::{OperationMode, Reg, RegisterSet};
+use crate::modes::OperationMode;
+use crate::registers::Reg;
+use crate::registers::RegisterSet;
 
 /// The primary processor of the Game Boy Advance. This is the CPU used to run
 /// Game Boy Advance Games.
@@ -19,7 +18,7 @@ impl Arm7Tdmi {
 	pub fn init() -> Self {
 		let mut cpu = Self {
 			halt: true,
-			registers: RegisterSet::new(),
+			registers: RegisterSet::default(),
 		};
 
 		cpu.reset();

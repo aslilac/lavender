@@ -5,8 +5,8 @@
 		"lavender-app"
 	],
 	"devDependencies": {
-		"@mckayla/prettier": "^1.0.1",
-		"prettier": "^2.5.1"
+		"@mckayla/prettier": "^1.0.3",
+		"prettier": "^2.7.1"
 	},
 	"scripts": {
 		"dev": "npm run dev -w @lavender/app",

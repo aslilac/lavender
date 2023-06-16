@@ -1,11 +1,11 @@
 pub mod arm;
 pub mod armv4t;
-pub mod cpu;
+pub mod core;
 pub mod memory;
 
+use crate::armv4t::{arm as old_arm, thumb};
 pub use arm::*;
-use armv4t::{arm as old_arm, thumb};
-use cpu::*;
+use core::*;
 use memory::*;
 
 pub struct Emulator {

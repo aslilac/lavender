@@ -1,7 +1,7 @@
-use num_enum::{IntoPrimitive, TryFromPrimitive};
-use std::convert::TryFrom;
+use num_enum::IntoPrimitive;
+use num_enum::TryFromPrimitive;
 
-use super::{ConditionCode, OperationMode};
+use crate::modes::OperationMode;
 
 /// An enum of the register names available to the processor. These names can be
 /// used in the `get_register_value` and `set_register_value` functions to ensure
@@ -31,13 +31,6 @@ pub enum Reg {
 	spsr,
 }
 
-impl Reg {
-	fn is_gp(&self) -> bool {
-		use Reg::*;
-		self != &cpsr && self != &spsr
-	}
-}
-
 /// The 31 registers contained within the ARM7TDMI processor.
 #[derive(Default)]
 pub struct RegisterSet {
@@ -61,7 +54,7 @@ pub struct RegisterSet {
 	pub r12: u32,
 	pub r12_fiq: u32,
 
-	// Stack pointer, but only by convention, not actually enforced.
+	// Stack pointer
 	// Known as sp in thumb
 	pub r13: u32,
 	pub r13_fiq: u32,
@@ -70,9 +63,7 @@ pub struct RegisterSet {
 	pub r13_irq: u32,
 	pub r13_und: u32,
 
-	// Link register
-	// Basically, the address to jump back to once a subroutine
-	// or interupt has completed execution.
+	// Link register (the address to jump back to once some execution has completed)
 	// Known as lr in thumb
 	pub r14: u32,
 	pub r14_fiq: u32,
@@ -120,15 +111,11 @@ impl RegisterSet {
 	const FIQ_DISABLE: u32 = 1 << 6;
 	const THUMB_BIT: u32 = 1 << 5;
 
-	pub fn new() -> Self {
-		Default::default()
-	}
-
 	pub fn get_value(&self, name: Reg) -> u32 {
 		use OperationMode::*;
 		use Reg::*;
 
-		let mode = self.get_operation_mode().unwrap();
+		let mode = OperationMode::from(self);
 
 		match (name, mode) {
 			// General purpose registers
@@ -171,8 +158,7 @@ impl RegisterSet {
 			(spsr, ABT) => self.spsr_abt,
 			(spsr, IRQ) => self.spsr_irq,
 			(spsr, UND) => self.spsr_und,
-			// This register is the only one that is unaccessable in certain
-			// execution modes.
+			// This register is the only one that is unaccessable in certain execution modes.
 			(spsr, _) => panic!("Attempting to use spsr register while not in a priveledged mode"),
 		}
 	}
@@ -181,7 +167,7 @@ impl RegisterSet {
 		use OperationMode::*;
 		use Reg::*;
 
-		let mode = self.get_operation_mode().unwrap();
+		let mode = OperationMode::from(&*self);
 
 		match (name, mode) {
 			(r0, _) => self.r0 = value,
@@ -315,63 +301,34 @@ impl RegisterSet {
 		let mode_flags: u32 = mode.into();
 		self.cpsr = (self.cpsr & 0xffffffe0) | mode_flags;
 	}
-
-	pub fn get_operation_mode(&self) -> Option<OperationMode> {
-		match OperationMode::try_from(self.cpsr & 0b11111) {
-			Ok(mode) => Some(mode),
-			Err(_) => None,
-		}
-	}
-
-	pub fn check_condition(&self, cond: ConditionCode) -> bool {
-		use ConditionCode::*;
-
-		match cond {
-			EQ => self.get_z(),
-			NE => !self.get_z(),
-			CS => self.get_c(),
-			CC => !self.get_c(),
-			MI => self.get_n(),
-			PL => !self.get_n(),
-			VS => self.get_v(),
-			VC => !self.get_v(),
-
-			HI => self.get_c() && !self.get_z(),
-			LS => !self.get_c() || self.get_z(),
-			GE => self.get_n() == self.get_v(),
-			LT => self.get_n() != self.get_v(),
-			GT => !self.get_z() && (self.get_n() == self.get_v()),
-			LE => self.get_z() && (self.get_n() != self.get_v()),
-
-			AL => true,
-			NO => true, // "Unpredictable behavior"
-		}
-	}
 }
 
 #[cfg(test)]
 mod tests {
-	use super::{ConditionCode::*, OperationMode::*, Reg::*, *};
+	use super::*;
+	use crate::modes::OperationMode;
+	use OperationMode::*;
+	use Reg::*;
 
 	#[test]
 	fn set_operation_mode() {
-		let mut rs = RegisterSet::new();
+		let mut rs = RegisterSet::default();
 
 		// SYS by default
-		assert_eq!(rs.get_operation_mode(), Some(SYS));
+		matches!(OperationMode::from(&rs), SYS);
 
 		// Change into UND mode
 		rs.set_operation_mode(UND);
-		assert_eq!(rs.get_operation_mode(), Some(UND));
+		matches!(OperationMode::from(&rs), UND);
 
 		// Change into USR mode
 		rs.set_operation_mode(USR);
-		assert_eq!(rs.get_operation_mode(), Some(USR));
+		matches!(OperationMode::from(&rs), USR);
 	}
 
 	#[test]
 	fn thumb_bit() {
-		let mut rs = RegisterSet::new();
+		let mut rs = RegisterSet::default();
 
 		// Off by default
 		assert_eq!(rs.get_thumb_bit(), false);
@@ -383,7 +340,7 @@ mod tests {
 
 	#[test]
 	fn register_mapping() {
-		let mut rs = RegisterSet::new();
+		let mut rs = RegisterSet::default();
 
 		rs.set_operation_mode(SVC);
 		rs.set_value(r13, 0xdeadbeef);
@@ -395,13 +352,20 @@ mod tests {
 
 	#[test]
 	fn interupts() {
-		let mut rs = RegisterSet::new();
+		let mut rs = RegisterSet::default();
 
-		// Disabled by default
+		// These should be disabled by default in practice, but we leave that
+		// responsibility to the CPU core.
+		assert!(!rs.is_fiq_disabled());
+		assert!(!rs.is_irq_disabled());
+
+		// Disable them
+		rs.set_fiq_disable(true);
+		rs.set_irq_disable(true);
 		assert!(rs.is_fiq_disabled());
 		assert!(rs.is_irq_disabled());
 
-		// Enable them
+		// Re-enable them
 		rs.set_fiq_disable(false);
 		rs.set_irq_disable(false);
 		assert!(!rs.is_fiq_disabled());
@@ -410,7 +374,7 @@ mod tests {
 
 	#[test]
 	fn condition_bits() {
-		let mut rs = RegisterSet::new();
+		let mut rs = RegisterSet::default();
 
 		// Should all be off by default
 		assert!(!rs.get_n());
@@ -444,47 +408,5 @@ mod tests {
 		assert!(rs.get_z());
 		assert!(rs.get_c());
 		assert!(rs.get_v());
-	}
-
-	#[test]
-	fn conditions() {
-		let mut rs = RegisterSet::new();
-
-		// All bits should be zero by default, so these conditions should pass.
-		assert!(rs.check_condition(PL));
-		assert!(rs.check_condition(NE));
-		assert!(rs.check_condition(CC));
-		assert!(rs.check_condition(VC));
-		assert!(rs.check_condition(GE));
-		assert!(rs.check_condition(AL));
-
-		// Turn on the negative bit. MI should pass, PL should not.
-		rs.set_nzcv(true, false, false, false);
-		assert!(rs.check_condition(MI));
-		assert!(!rs.check_condition(PL));
-
-		// N bit is set and V is not.
-		assert!(rs.check_condition(LT));
-
-		// Turn on the zero bit. EQ should pass, NE should not.
-		rs.set_nzcv(false, true, false, false);
-		assert!(rs.check_condition(EQ));
-		assert!(!rs.check_condition(NE));
-
-		// Z bit is set and C is not.
-		assert!(rs.check_condition(LS));
-
-		// Turn on the carry bit. CS should pass, CC should not.
-		rs.set_nzcv(false, false, true, false);
-		assert!(rs.check_condition(CS));
-		assert!(!rs.check_condition(CC));
-
-		// C bit is set and Z is not.
-		assert!(rs.check_condition(HI));
-
-		// Turn on the overflow bit. VS should pass, VC should not.
-		rs.set_nzcv(false, false, false, true);
-		assert!(rs.check_condition(VS));
-		assert!(!rs.check_condition(VC));
 	}
 }

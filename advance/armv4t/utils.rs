@@ -1,4 +1,4 @@
-use crate::emulator::{cpu::*, Emulator};
+use crate::emulator::{core::*, Emulator};
 use std::convert::TryFrom;
 
 pub fn process_shifter_operand(emulator: &mut Emulator, instruction: u32) -> u32 {

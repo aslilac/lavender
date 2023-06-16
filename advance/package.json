@@ -5,11 +5,11 @@
 	"description": "A Gameboy Advanced emulator written in Rust",
 	"license": "MIT",
 	"repository": "https://github.com/aslilac/lavender",
-	"main": "target/index.js",
+	"main": "./build/index.js",
 	"devDependencies": {
-		"wasm-pack": "^0.10.2"
+		"wasm-pack": "^0.11.1"
 	},
 	"scripts": {
-		"build": "wasm-pack build --release --out-dir target --out-name index"
+		"build": "wasm-pack build --release --out-dir build/ --out-name index"
 	}
 }

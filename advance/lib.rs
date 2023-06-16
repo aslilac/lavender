@@ -6,10 +6,10 @@
 
 // This should be removed when things are much closer to finalized
 #![allow(dead_code, unused_imports, unused_variables)]
-#![feature(box_syntax)]
 
 /// The core logic of the emulator is within this module.
 pub mod emulator;
+pub mod memory;
 
 use emulator::Emulator;
 use lazy_static::lazy_static;
