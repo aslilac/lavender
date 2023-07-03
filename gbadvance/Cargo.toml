@@ -1,7 +1,7 @@
 [package]
-name = "lavender_advance"
+name = "lavender_gbadvance"
 version = "0.0.1"
-authors = ["McKayla Washburn <mckayla@hey.com"]
+authors = ["McKayla Washburn <mckayla@hey.com>"]
 description = "A Gameboy Advanced emulator written in Rust"
 license = "MIT"
 edition = "2021"
@@ -11,8 +11,8 @@ crate-type = ["cdylib"]
 path = "./lib.rs"
 
 [dependencies]
-console_error_panic_hook = "0.1.6"
 lavender_armv4t = { workspace = true }
+console_error_panic_hook = "0.1.6"
 lazy_static = "1.4.0"
 num_enum = { workspace = true }
 wasm-bindgen = "0.2.87"

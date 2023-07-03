@@ -11,3 +11,5 @@ pub mod instructions {
 
 	pub mod adc;
 }
+
+pub use arm7tdmi::Arm7Tdmi;

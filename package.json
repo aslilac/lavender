@@ -6,12 +6,12 @@
 	],
 	"devDependencies": {
 		"@mckayla/prettier": "^1.0.3",
-		"prettier": "^2.7.1"
+		"prettier": "~2.8.8"
 	},
 	"scripts": {
 		"dev": "npm run dev -w @lavender/app",
 		"start": "npm run start -w @lavender/app",
-		"fmt": "prettier --ignore-path .gitignore --write . && cargo fmt",
+		"fmt": "prettier --write . && cargo fmt",
 		"lint": "npm run lint -w @lavender/app && cargo clippy",
 		"test": "npm run test -w @lavender/app && cargo test"
 	}

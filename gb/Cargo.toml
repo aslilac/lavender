@@ -1,0 +1,16 @@
+[package]
+name = "lavender_gb"
+version = "0.0.1"
+authors = ["McKayla Washburn <mckayla@hey.com>"]
+description = "A Gameboy emulator written in Rust"
+license = "MIT"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+path = "./lib.rs"
+
+[dependencies]
+lavender_armv4t = { workspace = true }
+
+wasm-bindgen = "0.2.87"

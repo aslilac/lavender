@@ -43,7 +43,7 @@ pub const SAVE_END: usize = SAVE_START + SAVE_SIZE - 1;
 pub struct Memory {
 	/// Stores the BIOS of the Game Boy Advance, which is home to the software
 	/// interupt table and some useful methods that there are not instructions for.
-	pub bios: Vec<u8>,
+	pub bios: Box<[u8; BIOS_SIZE]>,
 	/// Links to the RAM made available by the external cartiridge.
 	pub ext: Vec<u8>,
 	/// Links to the RAM that is embedded into the CPU.
@@ -71,7 +71,7 @@ impl Memory {
 	pub fn init() -> Self {
 		let mut memory = Self {
 			// TODO: Try to switch to `box [0; BIOS_SIZE]` etc. eventually
-			bios: vec![0; BIOS_SIZE],
+			bios: Box::new([0; BIOS_SIZE]),
 			ext: vec![0; EXT_SIZE],
 			ram: vec![0; RAM_SIZE],
 			io: vec![0; IO_SIZE],
@@ -92,7 +92,7 @@ impl Memory {
 
 	pub fn init_small_no_bios() -> Self {
 		Self {
-			bios: vec![0; 32],
+			bios: Box::new([0; BIOS_SIZE]),
 			ext: vec![0; 32],
 			ram: vec![0; 32],
 			io: vec![0; 32],
@@ -104,7 +104,7 @@ impl Memory {
 		}
 	}
 
-	pub fn get_mapped_segment_and_real_offset(&self, address: u32) -> Option<(&Vec<u8>, usize)> {
+	pub fn get_mapped_segment_and_real_offset(&self, address: u32) -> Option<(&[u8], usize)> {
 		let i = address as usize;
 
 		match i {

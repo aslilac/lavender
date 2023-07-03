@@ -9,11 +9,6 @@ pub struct Arm7Tdmi {
 	pub halt: bool,
 }
 
-/// The secondary processor of the Game Boy Advance. It is the same one used in
-/// the Game Boy and Game Boy Color, and is included for backwards compatibility.
-/// We do not yet do anything with it, but might in the future.
-pub struct LR35902;
-
 impl Arm7Tdmi {
 	pub fn init() -> Self {
 		let mut cpu = Self {

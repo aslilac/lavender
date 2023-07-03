@@ -42,7 +42,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "lavender_advance"
+name = "lavender_armv4t"
+version = "0.0.1"
+dependencies = [
+ "num_enum",
+]
+
+[[package]]
+name = "lavender_gb"
+version = "0.0.1"
+dependencies = [
+ "lavender_armv4t",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "lavender_gbadvance"
 version = "0.0.1"
 dependencies = [
  "console_error_panic_hook",
@@ -53,10 +68,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "lavender_armv4t"
+name = "lavender_gbcolor"
 version = "0.0.1"
 dependencies = [
- "num_enum",
+ "lavender_armv4t",
+ "wasm-bindgen",
 ]
 
 [[package]]

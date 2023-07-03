@@ -1,11 +1,15 @@
 [workspace]
 resolver = "2"
 members = [
-	"advance",
 	"armv4t",
+	"gb",
+	"gbcolor",
+	"gbadvance",
 ]
 
 [workspace.dependencies]
-lavender_advance = { version = "*", path = "advance/" }
 lavender_armv4t = { version = "*", path = "armv4t/" }
+lavender_gb = { version = "*", path = "gb/" }
+lavender_gbcolor = { version = "*", path = "gbcolor/" }
+lavender_gbadvance = { version = "*", path = "gbadvance/" }
 num_enum = "0.5.3"
